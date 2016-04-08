@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var filescraper = require('../lib/filescraper');
+var MEDIA_DIR = require('../config.json').MEDIA_DIR;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -9,9 +10,7 @@ router.get('/', function(req, res, next) {
 
 /* GET file structure. */
 router.get('/fs', function(req, res, next) {
-  var dirTree = ('.');
-
-  filescraper.diretoryTreeToObj(dirTree, function(err, tree) {
+  filescraper.diretoryTreeToObj(MEDIA_DIR, function(err, tree) {
       if(err) console.error(err);
       res.send(JSON.stringify(tree));
   });
