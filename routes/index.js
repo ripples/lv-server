@@ -10,9 +10,23 @@ router.get('/', function(req, res, next) {
 
 /* GET file structure. */
 router.get('/fs', function(req, res, next) {
-  filescraper.diretoryTreeToObj(MEDIA_DIR, function(err, tree) {
+  filescraper.directoryTreeToObj(MEDIA_DIR, function(err, tree) {
       if(err) console.error(err);
       res.send(JSON.stringify(tree));
+  });
+});
+
+router.get('/folders', function(req, res, next) {
+  filescraper.directoryTreeFolders(MEDIA_DIR, function(err,tree) {
+    if (err) console.error(err);
+    res.send(JSON.stringify(tree));
+  });
+});
+
+router.get('/files', function(req,res,next) {
+  filescraper.directoryTreeFolders(MEDIA_DIR, function(err,tree) {
+    if (err) console.error(err);
+    res.send(JSON.stringify(tree));
   });
 });
 
