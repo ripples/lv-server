@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var filescraper = require('../lib/filescraper');
-var MEDIA_DIR = require('../config.json').MEDIA_DIR;
+var MEDIA_DIR = process.env.MEDIA_DIR;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
