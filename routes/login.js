@@ -23,9 +23,11 @@ router.post('/', function(req, res, next) {
         } else if(success) {
 
           // create a JSON web token and send it to the user
+          // TODO currently returns fake classnames
           var claims = {
             iss: "Lecture Viewer",
-            username: username
+            username: username,
+            classnames: ['COMPSCI 326', 'COMPSCI 497']
           };
           var jwt = njwt.create(claims, SIGNING_KEY);
           var token = jwt.compact();

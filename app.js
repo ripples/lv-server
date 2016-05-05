@@ -7,6 +7,7 @@ var auth = require('./lib/auth.js');
 
 var routes = require('./routes/index');
 var login = require('./routes/login');
+var lectures = require('./routes/lectures');
 
 var app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', login);
 // authenticated routes
 app.use(auth);
 app.use('/', routes);
+app.use('/api/lectures', lectures);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
