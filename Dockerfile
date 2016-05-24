@@ -1,4 +1,5 @@
 FROM molecularplayground/node-js
+RUN apk add --no-cache bash
 
 COPY . /src
 
@@ -6,6 +7,8 @@ WORKDIR /src
 
 RUN npm install
 
-CMD ["npm", "start"]
+RUN npm install -g node-inspector
+
+CMD ["npm", "run", "start-dev"]
 
 EXPOSE 3000
