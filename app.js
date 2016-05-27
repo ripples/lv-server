@@ -1,33 +1,38 @@
-/* jshint node: true */
 "use strict";
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 
-var auth = require('./lib/auth.js');
-var routes = require('./routes/index');
-var login = require('./routes/login');
-var lectures = require('./routes/lectures');
-var logger = require("./utils/logger");
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 
-var app = express();
+const auth = require('./lib/auth.js');
+const routes = require('./routes/index');
+const login = require('./routes/login');
+const lectures = require('./routes/lectures');
+const logger = require("./utils/logger");
+
+const app = express();
+
+if (app.get('env') === 'development') {
+  app.engine('html', require('ejs').renderFile);
+  app.set('view engine', 'html');
+}
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 
-app.use(express.static(path.join(__dirname, 'public')));
 // unauthenticated routes
 app.use('/api/v1/login', login);
-// authenticated routes
-app.use('/', auth, routes);
 
-app.use('/api/lectures', auth, lectures);
+// authenticated routes
+app.use(auth);
+app.use('/', routes);
+app.use('/api/v1/lectures', lectures);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
+app.use((req, res, next) => {
+  let err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
@@ -35,9 +40,9 @@ app.use(function(req, res, next) {
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
+  app.use((err, req, res) => {
     res.status(err.status || 500);
-
+    logger.error(err.message);
     res.send({
       message: err.message,
       error: err
@@ -47,13 +52,13 @@ if (app.get('env') === 'development') {
 
 // production error handler
 // no stacktraces leaked to user
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   res.status(err.status || 500);
+  logger.error(err.message);
   res.send({
     message: err.message,
     error: {}
   });
 });
-
 
 module.exports = app;
