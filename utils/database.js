@@ -1,15 +1,14 @@
 "use strict";
 
 var mysql = require('mysql');
-var config = require('../config.json').db;
 var logger = require('./logger');
 
 var pool = mysql.createPool({
   connectionLimit: 10,
-  host: config.host,
-  user: config.user,
-  password: config.password,
-  database: config.name
+  host: 'db',
+  user: 'root',
+  password: process.env.MYSQL_ROOT_PASSWORD,
+  database: process.env.MYSQL_DATABASE
 });
 
 /**

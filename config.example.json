@@ -1,8 +1,0 @@
-{
-  "db": {
-    "host": "db",
-    "user": "root",
-    "password": "banana",
-    "name": "lecture_viewer"
-  }
-}
