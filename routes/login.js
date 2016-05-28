@@ -1,48 +1,38 @@
 "use strict";
 
-var express = require('express');
-var router = express.Router();
-var bcrypt = require('bcryptjs');
-var njwt = require('njwt');
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcryptjs');
+const njwt = require('njwt');
 
-var database = require('../utils/database');
-var logger = require('../utils/logger');
+const database = require('../utils/database');
+const logger = require('../utils/logger');
 
-var SIGNING_KEY = process.env.SIGNING_KEY;
+const SIGNING_KEY = process.env.SIGNING_KEY;
 
 // login
 router.post('/', (req, res, next) => {
-  var username = req.body.username;
-  var unhashedPassword = req.body.password;
+  let email = req.body.email;
+  let password = req.body.password;
 
-  hashString(unhashedPassword, (err, hashedPassword) => {
+  database.getIdAndHashFromEmail(email, (err, result) => {
     if (err) {
-      logger.error(err);
       next(err);
     } else {
-      database.getHashedUserPassword(username, () => {});
       // compare each hash to make sure the user is who they say they are
-      bcrypt.compare(unhashedPassword, hashedPassword, (err, success) => {
-        if (err) {
-          next(err);
+      bcrypt.compare(password, result.password, (err1, success) => {
+        if (err1) {
+          next(err1);
         } else if (success) {
-
-          // create a JSON web token and send it to the user
-          // TODO currently returns fake classnames
-          var claims = {
-            iss: "Lecture Viewer",
-            username: username,
-            classnames: ['COMPSCI 326', 'COMPSCI 497']
-          };
-          var jwt = njwt.create(claims, SIGNING_KEY);
-          var token = jwt.compact();
-          res.send({
-            token: token,
-            username: username
+          generateUserJwt(result.id, (err2, token) => {
+            if (err2) {
+              next(err2);
+            } else {
+              res.send({token: token});
+            }
           });
-
         } else {
-          var err = new Error("Invalid email or password");
+          let err = new Error("Invalid email or password");
           err.status = 403;
           next(err);
         }
@@ -50,6 +40,27 @@ router.post('/', (req, res, next) => {
     }
   });
 });
+
+/**
+ * Creates a JSON web token and send it to the user
+ * @param {number} id - user id
+ * @param {function} callback - JWT token
+ */
+function generateUserJwt(id, callback) {
+  database.getCoursesFromId(id, (err, result) => {
+    if (err) {
+      callback(err);
+    } else {
+      let claims = {
+        iss: "Lecture Viewer",
+        sub: id,
+        courses: result.name
+      };
+      let jwt = njwt.create(claims, SIGNING_KEY);
+      callback(null, jwt.compact());
+    }
+  });
+}
 
 /**
  * hashes a string and calls the callback with (err, hash)
