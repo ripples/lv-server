@@ -5,8 +5,8 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const njwt = require('njwt');
 
-const database = require('../utils/database');
-const logger = require('../utils/logger');
+const database = require('../lib/database');
+const logger = require('../lib/logger');
 
 const SIGNING_KEY = process.env.SIGNING_KEY;
 
@@ -47,15 +47,21 @@ router.post('/', (req, res, next) => {
  * @param {function} callback - JWT token
  */
 function generateUserJwt(id, callback) {
-  database.getCoursesFromId(id, (err, result) => {
+  database.getCoursesFromUserId(id, (err, result) => {
     if (err) {
       callback(err);
     } else {
       let claims = {
         iss: "Lecture Viewer",
         sub: id,
-        courses: result.name
+        courses: result.map(course => {
+          return {
+            id: course.id,
+            name: course.name
+          };
+        })
       };
+
       let jwt = njwt.create(claims, SIGNING_KEY);
       callback(null, jwt.compact());
     }

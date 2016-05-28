@@ -9,14 +9,9 @@ const auth = require('./lib/auth.js');
 const routes = require('./routes/index');
 const login = require('./routes/login');
 const lectures = require('./routes/lectures');
-const logger = require("./utils/logger");
+const logger = require("./lib/logger");
 
 const app = express();
-
-if (app.get('env') === 'development') {
-  app.engine('html', require('ejs').renderFile);
-  app.set('view engine', 'html');
-}
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
