@@ -9,9 +9,9 @@ const logger = require('../lib/logger');
 
 let httpAgent = new http.Agent({keepAlive: true});
 
-// return a list of every lecture the user can view
-router.post('/', (req, res, next) => {
-  let courseId = parseInt(req.body.courseId);
+// Return list of lectures meta data of course
+router.post('/:id', (req, res, next) => {
+  let courseId = parseInt(req.params.courseId);
   let courseName = req.body.courseName;
 
   let options = {
