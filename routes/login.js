@@ -18,7 +18,7 @@ router.post('/', (req, res, next) => {
   database.getIdAndHashFromEmail(email, (err, result) => {
     if (err) {
       next(err);
-    } else {
+    } else if (result.password) {
       // compare each hash to make sure the user is who they say they are
       bcrypt.compare(password, result.password, (err1, success) => {
         if (err1) {
@@ -37,6 +37,8 @@ router.post('/', (req, res, next) => {
           next(err);
         }
       });
+    } else {
+      res.sendStatus(401);
     }
   });
 });
