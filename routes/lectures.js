@@ -10,8 +10,8 @@ const logger = require('../lib/logger');
 let httpAgent = new http.Agent({keepAlive: true});
 
 // Return list of lectures meta data of course
-router.post('/:id', (req, res, next) => {
-  let courseId = parseInt(req.params.courseId);
+router.post('/:id', (req, res) => {
+  let courseId = parseInt(req.params.courseId, 10);
   let courseName = req.body.courseName;
 
   let options = {
@@ -34,8 +34,9 @@ router.post('/:id', (req, res, next) => {
       });
     });
     request.setTimeout(500, () => {
-      reject(`Request to lv-media/${options.path}:${options.port}
-      timed out for course ${courseName} id: ${courseId}`);
+      reject(`Request to
+      ${options.port}/${options.path}/${courseId}:${options.port}
+      timed out for course ${courseName}`);
     });
   });
 
