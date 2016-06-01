@@ -1,5 +1,4 @@
 FROM molecularplayground/node-js
-RUN apk add --no-cache bash
 
 COPY . /src
 
