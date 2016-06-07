@@ -4,9 +4,9 @@ COPY . /src
 
 WORKDIR /src
 
-RUN npm install
 RUN npm install -g nodemon
 
-CMD ["nodemon", "-L", "run", "start-dev"]
+# don't run npm install until we have already mounted the working directory
+CMD /bin/sh -c "npm install && nodemon -L run start-dev"
 
 EXPOSE 3000
