@@ -9,7 +9,7 @@ const logger = require('../lib/logger');
 
 let httpAgent = new http.Agent({keepAlive: true});
 
-// Return list of lectures meta data of course
+// Return metadata of lecture
 router.post('/:id', (req, res) => {
   let courseId = parseInt(req.params.courseId, 10);
   let courseName = req.body.courseName;
