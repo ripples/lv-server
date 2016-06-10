@@ -12,8 +12,8 @@ const SIGNING_KEY = process.env.SIGNING_KEY;
 
 // login
 router.post('/', (req, res, next) => {
-  let email = req.body.email;
-  let password = req.body.password;
+  const email = req.body.email;
+  const password = req.body.password;
 
   database.getIdAndHashFromEmail(email, (err, result) => {
     if (err) {
@@ -32,7 +32,7 @@ router.post('/', (req, res, next) => {
             }
           });
         } else {
-          let err = new Error("Invalid email or password");
+          const err = new Error("Invalid email or password");
           err.status = 403;
           next(err);
         }
@@ -53,7 +53,7 @@ function generateUserJwt(id, callback) {
     if (err) {
       callback(err);
     } else {
-      let claims = {
+      const claims = {
         iss: "Lecture Viewer",
         sub: id,
         courses: result.map(course => {
@@ -64,7 +64,7 @@ function generateUserJwt(id, callback) {
         })
       };
 
-      let jwt = njwt.create(claims, SIGNING_KEY);
+      const jwt = njwt.create(claims, SIGNING_KEY);
       callback(null, jwt.compact());
     }
   });
