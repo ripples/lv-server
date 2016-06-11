@@ -1,21 +1,22 @@
 "use strict";
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const njwt = require('njwt');
+const bcrypt = require("bcryptjs");
+const njwt = require("njwt");
 
-const database = require('../lib/database');
-const logger = require('../lib/logger');
+const database = require("../lib/database");
+const logger = require("../lib/logger");
 
 const SIGNING_KEY = process.env.SIGNING_KEY;
 
 // login
-router.post('/', (req, res, next) => {
+router.post("/", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
   database.getIdAndHashFromEmail(email, (err, result) => {
+    logger.info(`${email} attempting to authenticate`);
     if (err) {
       next(err);
     } else if (result.password) {
@@ -28,6 +29,7 @@ router.post('/', (req, res, next) => {
             if (err2) {
               next(err2);
             } else {
+              logger.info(`${email} successfully authenticated`);
               res.send({token: token});
             }
           });

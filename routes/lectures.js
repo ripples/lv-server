@@ -1,35 +1,37 @@
 "use strict";
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const http = require('http');
+const http = require("http");
 
-const database = require('../lib/database');
-const logger = require('../lib/logger');
+const database = require("../lib/database");
+const logger = require("../lib/logger");
 
-let httpAgent = new http.Agent({keepAlive: true});
+const httpAgent = new http.Agent({keepAlive: true});
 
 // Return metadata of lecture
-router.post('/:id', (req, res) => {
-  let courseId = parseInt(req.params.courseId, 10);
-  let courseName = req.body.courseName;
+router.post("/:id", (req, res) => {
+  const courseId = parseInt(req.params.courseId, 10);
+  const courseName = req.body.courseName;
 
-  let options = {
+  logger.info(`${courseId}:${courseName} requested`);
+
+  const options = {
     hostname: "lv-media",
     port: process.env.MEDIA_SERVER_PORT,
     path: `${process.env.SEMESTER}/${courseName}`,
     agent: httpAgent
   };
 
-  let mediaRequest = new Promise((resolve, reject) => {
-    let request = http.get(options, res => {
+  const mediaRequest = new Promise((resolve, reject) => {
+    const request = http.get(options, res => {
       let data = "";
 
-      res.on('data', chunk => {
+      res.on("data", chunk => {
         data += chunk;
       });
 
-      res.on('end', () => {
+      res.on("end", () => {
         resolve(JSON.parse(data));
       });
     });
@@ -40,7 +42,7 @@ router.post('/:id', (req, res) => {
     });
   });
 
-  let metaDataRequest = new Promise((resolve, reject) => {
+  const metaDataRequest = new Promise((resolve, reject) => {
     database.getCourseMetaData(courseId, (err, result) => {
       if (err) {
         reject(err);
@@ -50,9 +52,9 @@ router.post('/:id', (req, res) => {
   });
 
   Promise.all([mediaRequest, metaDataRequest]).then(values => {
-    let mediaResponse = values[0];
-    let dbResponse = values[1];
-    let response = {
+    const mediaResponse = values[0];
+    const dbResponse = values[1];
+    const response = {
       lectures: mediaResponse,
       description: dbResponse.course_description,
       prof: `${dbResponse.prof_fname} ${dbResponse.prof_lname}`,
