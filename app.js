@@ -8,7 +8,7 @@ const bodyParser = require("body-parser");
 const auth = require("./lib/auth.js");
 const routes = require("./routes/index");
 const login = require("./routes/login");
-const lectures = require("./routes/lectures");
+const courses = require("./routes/courses");
 const logger = require("./lib/logger");
 
 const app = express();
@@ -23,7 +23,7 @@ app.use("/api/v1/login", login);
 // authenticated routes
 app.use(auth);
 app.use("/", routes);
-app.use("/api/v1/lectures", lectures);
+app.use("/api/v1/courses", courses);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
