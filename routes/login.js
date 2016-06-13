@@ -60,7 +60,8 @@ function generateUserJwt(id, callback) {
         sub: id,
         courses: result.map(course => {
           return {
-            id: course.id
+            id: course.id,
+            name: course.name
           };
         })
       };

@@ -7,65 +7,105 @@ const logger = require("../lib/logger");
 const mediaApi = require("../lib/mediaApi");
 
 /**
- * Return courses list for user
+ * Return meta data for course
  */
-router.post("/", (req, res, next) => {
-  const courseIds = req.user.courses.map(course => course.id);
+router.get("/", (req, res, next) => {
+  const courses = req.user.courses;
+  const courseIds = courses.map(course => course.id);
 
-  logger.info(`User: ${req.user.sub} requested course meta data for courses: ${courseIds}`);
+  logger.info(`Courses requested by ${req.user.sub}`);
 
-  database.getCourseListMetaData(courseIds, (err, result) => {
-    if (err) {
-      next(err);
-    }
+  const promises = [];
+  courses.forEach(course => {
+    promises.push(new Promise((resolve, reject) => {
+      mediaApi.getLectures(course.name, (err, result) => {
+        if (err) {
+          reject(err);
+        }
+        const wrapper = {
+          id: course.id,
+          lectures: result
+        };
+        resolve(wrapper);
+      });
+    }));
+  });
 
-    if (!Array.isArray(result)) {
-      result = [result];
-    }
+  promises.push(new Promise((resolve, reject) => {
+    database.getCourseListMetaData(courseIds, (err, result) => {
+      if (err) {
+        reject(err);
+      }
+
+      if (!Array.isArray(result)) {
+        result = [result];
+      }
+
+      resolve(result);
+    });
+  }));
+
+  Promise.all(promises).then(values => {
+    const dbResponse = values.pop();
+    const response = values.map(mediaResponse => {
+      const courseMetaData = dbResponse.find(courseMetaData => courseMetaData.id === mediaResponse.id);
+      return {
+        id: courseMetaData.id,
+        lectures: mediaResponse.lectures,
+        metaData: {
+          description: courseMetaData.course_description,
+          prof: `${courseMetaData.prof_fname} ${courseMetaData.prof_lname}`,
+          profEmail: courseMetaData.prof_email,
+          startDtm: courseMetaData.start_dtm,
+          endDtm: courseMetaData.end_dtm
+        }
+      };
+    });
 
     logger.info(`Successfully returned course meta data for courses: ${courseIds} to User: ${req.user.sub}`);
-    res.send(result);
+
+    res.send(response);
+  }, reason => {
+    next(reason);
   });
 });
 
 /**
- * Return lectures list for course
+ * Returns metadata for all lectures for course
  */
 router.post("/:id", (req, res, next) => {
   const courseId = parseInt(req.params.courseId, 10);
-  const courseName = req.user.courses.find(course => course.id === courseId);
+  const lectures = req.body.lectures;
+  const course = req.user.courses.find(course => course.id === courseId);
 
   // User not registered to course
-  if (!courseName) {
+  if (!course) {
     res.sendStatus(401);
   }
 
-  logger.info(`${courseId}:${courseName} requested`);
+  logger.info(`${courseId}:${course.name} lectures requested`);
 
-  const mediaRequest = new Promise((resolve, reject) => {
-    mediaApi.getLectures(courseName, resolve, reject);
-  });
-
-  const metaDataRequest = new Promise((resolve, reject) => {
-    database.getCourseListMetaData([courseId], (err, result) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(result);
+  const promises = lectures.map(lecture => {
+    return new Promise((resolve, reject) => {
+      mediaApi.getLecture(course.name, lecture, (err, result) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(result);
+      });
     });
   });
 
-  Promise.all([mediaRequest, metaDataRequest]).then(values => {
-    const mediaResponse = values[0];
-    const dbResponse = values[1];
-    const response = {
-      lectures: mediaResponse,
-      description: dbResponse.course_description,
-      prof: `${dbResponse.prof_fname} ${dbResponse.prof_lname}`,
-      profEmail: dbResponse.prof_email,
-      startDtm: dbResponse.start_dtm,
-      endDtm: dbResponse.end_dtm
-    };
+  Promise.all(promises).then(values => {
+    const response = values.map((lectureMetaData, i) => {
+      return {
+        name: lectures[i],
+        data: lectureMetaData
+      };
+    });
+
+    logger.info(`Successfully returned lecture meta data for cours: ${courseId} to User: ${req.user.sub}`);
+
     res.send(response);
   }, reason => {
     next(reason);
