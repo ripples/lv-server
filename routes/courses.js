@@ -1,13 +1,14 @@
 "use strict";
 
 const router = require("express").Router();
+const path = require("path");
 
 const database = require("../lib/database");
 const logger = require("../lib/logger");
 const mediaApi = require("../lib/mediaApi");
 
 /**
- * Return meta data for course
+ * Serves meta data for course
  */
 router.get("/", (req, res, next) => {
   const courses = req.user.courses;
@@ -71,7 +72,7 @@ router.get("/", (req, res, next) => {
 });
 
 /**
- * Returns metadata for all lectures for course
+ * Serves metadata for given lectures for course
  */
 router.post("/:id", (req, res, next) => {
   const courseId = parseInt(req.params.courseId, 10);
@@ -83,8 +84,7 @@ router.post("/:id", (req, res, next) => {
     res.sendStatus(401);
   }
 
-  logger.info(`${courseId}:${course.name} lectures requested`);
-
+  logger.info(`${courseId}:${course.name} lectures requested by ${req.user.sub}`);
   const promises = lectures.map(lecture => {
     return new Promise((resolve, reject) => {
       mediaApi.getLecture(course.name, lecture, (err, result) => {
@@ -110,6 +110,28 @@ router.post("/:id", (req, res, next) => {
   }, reason => {
     next(reason);
   });
+});
+
+/**
+ *  Serves authenticated media via lv-proxy
+ */
+router.get("/:id/:lecture", (req, res, next) => {
+  const courseId = parseInt(req.params.courseId, 10);
+  const lectureName = parseInt(req.params.lecture, 10);
+  const course = req.user.courses.find(course => course.id === courseId);
+
+  // User not registered to course
+  if (!course) {
+    res.sendStatus(401);
+  }
+  logger.info(`Lecture: ${lectureName} requested for ${courseId}:${course.name} requested by ${req.user.sub}`);
+
+  const mediaPath = path.join("/api", process.env.MEDIA_DIR, `${course.name}`, `${lectureName}`, "test.mp4");
+
+  res.writeHead(200, {
+    "X-Accel-Redirect": mediaPath
+  });
+  res.end();
 });
 
 module.exports = router;
