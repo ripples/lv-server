@@ -52,14 +52,13 @@ router.get("/", (req, res, next) => {
       const courseMetaData = dbResponse.find(courseMetaData => courseMetaData.id === mediaResponse.id);
       return {
         id: courseMetaData.id,
+        name: courseMetaData.course_name,
         lectures: mediaResponse.lectures,
-        metaData: {
-          description: courseMetaData.course_description,
-          prof: `${courseMetaData.prof_fname} ${courseMetaData.prof_lname}`,
-          profEmail: courseMetaData.prof_email,
-          startDtm: courseMetaData.start_dtm,
-          endDtm: courseMetaData.end_dtm
-        }
+        description: courseMetaData.course_description,
+        prof: `${courseMetaData.prof_fname} ${courseMetaData.prof_lname}`,
+        profEmail: courseMetaData.prof_email,
+        startDtm: courseMetaData.start_dtm,
+        endDtm: courseMetaData.end_dtm
       };
     });
 
@@ -75,13 +74,20 @@ router.get("/", (req, res, next) => {
  * Serves metadata for given lectures for course
  */
 router.post("/:id", (req, res, next) => {
-  const courseId = parseInt(req.params.courseId, 10);
+  const courseId = req.params.id;
   const lectures = req.body.lectures;
   const course = req.user.courses.find(course => course.id === courseId);
 
   // User not registered to course
   if (!course) {
+    logger.info(`Unauthorized access to ${courseId} lectures requested by ${req.user.sub}`);
     res.sendStatus(401);
+    return;
+  }
+
+  if (!lectures) {
+    res.sendStatus(400);
+    return;
   }
 
   logger.info(`${courseId}:${course.name} lectures requested by ${req.user.sub}`);
@@ -116,8 +122,8 @@ router.post("/:id", (req, res, next) => {
  *  Serves authenticated media via lv-proxy
  */
 router.get("/:id/:lecture", (req, res, next) => {
-  const courseId = parseInt(req.params.courseId, 10);
-  const lectureName = parseInt(req.params.lecture, 10);
+  const courseId =req.params.courseId;
+  const lectureName = req.params.lecture;
   const course = req.user.courses.find(course => course.id === courseId);
 
   // User not registered to course
