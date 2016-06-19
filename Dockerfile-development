@@ -1,4 +1,4 @@
-FROM molecularplayground/node-js
+FROM node:6.2.2
 
 COPY . /src
 

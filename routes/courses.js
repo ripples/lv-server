@@ -122,7 +122,7 @@ router.post("/:id", (req, res, next) => {
  *  Serves authenticated media via lv-proxy
  */
 router.get("/:id/:lecture", (req, res, next) => {
-  const courseId =req.params.courseId;
+  const courseId = req.params.id;
   const lectureName = req.params.lecture;
   const course = req.user.courses.find(course => course.id === courseId);
 
@@ -132,10 +132,12 @@ router.get("/:id/:lecture", (req, res, next) => {
   }
   logger.info(`Lecture: ${lectureName} requested for ${courseId}:${course.name} requested by ${req.user.sub}`);
 
-  const mediaPath = path.join("/api", process.env.MEDIA_DIR, `${course.name}`, `${lectureName}`, "test.mp4");
+  const mediaDir = ["/api", process.env.MEDIA_DIR, process.env.SEMESTER, course.name, lectureName];
+
+  const videoPath = path.join(...mediaDir, "video.mp4");
 
   res.writeHead(200, {
-    "X-Accel-Redirect": mediaPath
+    "X-Accel-Redirect": videoPath
   });
   res.end();
 });
