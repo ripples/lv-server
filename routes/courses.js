@@ -10,6 +10,7 @@ const mediaApi = require("../lib/mediaApi");
 /**
  * Serves meta data for course
  */
+
 router.get("/", (req, res, next) => {
   const courses = req.user.courses;
   const courseIds = courses.map(course => course.id);
@@ -57,8 +58,9 @@ router.get("/", (req, res, next) => {
         description: courseMetaData.course_description,
         prof: `${courseMetaData.prof_fname} ${courseMetaData.prof_lname}`,
         profEmail: courseMetaData.prof_email,
-        startDtm: courseMetaData.start_dtm,
-        endDtm: courseMetaData.end_dtm
+        semester: courseMetaData.semester,
+        startDtm: courseMetaData.semester_start_dtm,
+        endDtm: courseMetaData.semester_end_dtm
       };
     });
 
