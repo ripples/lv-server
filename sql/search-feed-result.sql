@@ -1,4 +1,3 @@
-SELECT
-    *
+SELECT *
 FROM courses c
-where c.name like ?
+WHERE c.name LIKE ?

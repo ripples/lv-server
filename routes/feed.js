@@ -14,9 +14,9 @@ const logger = require("../lib/logger");
  * so far it only returns the courses the user writes on the search
  * post that handles the search for keywords on the feed section
  */
-router.post("/search", (req, res, next)=> {
+router.post("/search", (req, res, next) => {
   const keyWord = req.body.searchContent;
-  database.getSearchResult(keyWord, null, (err, result)=> {
+  database.getSearchResult(keyWord, null, (err, result) => {
     if (err) {
       next(err);
     }
