@@ -1,4 +1,4 @@
-FROM molecularplayground/node-js
+FROM node:6.2.2
 
 COPY . /src
 
@@ -7,6 +7,6 @@ WORKDIR /src
 RUN npm install -g nodemon
 
 # don't run npm install until we have already mounted the working directory
-CMD /bin/sh -c "npm install && nodemon -L run start-dev"
+CMD /bin/sh -c "npm install && nodemon -L -e '.js|.sql' run start-dev"
 
 EXPOSE 3000
