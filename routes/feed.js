@@ -1,10 +1,10 @@
 "use strict";
+
 /**
  * Feed route: handles the request made on the feed section
  */
 
-const router = require('express').Router();
-const path = require("path");
+const router = require("express").Router();
 
 const database = require("../lib/database");
 const logger = require("../lib/logger");

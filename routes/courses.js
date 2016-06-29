@@ -17,7 +17,7 @@ router.get("/", (req, res, next) => {
 
   logger.info(`Courses requested by ${req.user.sub}`);
 
-  const promises = [];
+  let promises = [];
   courses.forEach(course => {
     promises.push(new Promise((resolve, reject) => {
       mediaApi.getLectures(course.name, (err, result) => {
