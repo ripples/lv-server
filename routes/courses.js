@@ -1,7 +1,6 @@
 "use strict";
 
 const router = require("express").Router();
-const path = require("path");
 
 const database = require("../lib/database");
 const logger = require("../lib/logger");
@@ -75,7 +74,8 @@ router.get("/", (req, res, next) => {
 /**
  * Serves metadata for given lectures for course
  */
-router.post("/:id", (req, res, next) => {
+router.post("/:semester/:id", (req, res, next) => {
+  const semester = req.params.semester;
   const courseId = req.params.id;
   const lectures = req.body.lectures;
   const course = req.user.courses.find(course => course.id === courseId);
@@ -95,11 +95,16 @@ router.post("/:id", (req, res, next) => {
   logger.info(`${courseId}:${course.name} lectures requested by ${req.user.sub}`);
   const promises = lectures.map(lecture => {
     return new Promise((resolve, reject) => {
-      mediaApi.getLecture(course.name, lecture, (err, result) => {
+      mediaApi.getLectureMetaData(semester, course.name, lecture, (err, result) => {
         if (err) {
           reject(err);
         }
-        resolve(result);
+        resolve({
+          startTimestamp: result.timestamp,
+          duration: result.duration,
+          whiteboardCount: result.whiteboard_count,
+          computerCount: result.computer_count
+        });
       });
     });
   });
@@ -112,36 +117,12 @@ router.post("/:id", (req, res, next) => {
       };
     });
 
-    logger.info(`Successfully returned lecture meta data for cours: ${courseId} to User: ${req.user.sub}`);
+    logger.info(`Successfully returned lecture meta data for course: ${courseId} to User: ${req.user.sub}`);
 
     res.send(response);
   }, reason => {
     next(reason);
   });
-});
-
-/**
- *  Serves authenticated media via lv-proxy
- */
-router.get("/:id/:lecture", (req, res, next) => {
-  const courseId = req.params.id;
-  const lectureName = req.params.lecture;
-  const course = req.user.courses.find(course => course.id === courseId);
-
-  // User not registered to course
-  if (!course) {
-    res.sendStatus(401);
-  }
-  logger.info(`Lecture: ${lectureName} requested for ${courseId}:${course.name} requested by ${req.user.sub}`);
-
-  const mediaDir = ["/api", process.env.MEDIA_DIR, process.env.SEMESTER, course.name, lectureName];
-
-  const videoPath = path.join(...mediaDir, "video.mp4");
-
-  res.writeHead(200, {
-    "X-Accel-Redirect": videoPath
-  });
-  res.end();
 });
 
 module.exports = router;

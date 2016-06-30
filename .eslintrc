@@ -5,6 +5,7 @@
   },
   "rules": {
     "quotes": 1,
+    "quote-props": [1, "consistent"],
     "max-len": [1, 120],
     "operator-linebreak": [1, "before"]
   }
