@@ -15,21 +15,19 @@ const MEDIA_PATH = ["/api", process.env.MEDIA_DIR];
 /**
  * Sends response with included media path payload
  * @param {String} mediaPath - path of media source
- * @param {Object} data - data for media object
+ * @param {String} contentType - mimeType of response
  * @param {Object} res - response object
  */
-function sendRedirectResponse(mediaPath, data, res) {
-  res.writeHead(200, {
-    "X-Accel-Redirect": mediaPath,
-    "data": data
-  });
+function sendRedirectResponse(mediaPath, contentType, res) {
+  res.setHeader("X-Accel-Redirect", mediaPath);
+  res.setHeader("Content-Type", contentType);
   res.end();
 }
 
 /**
- *  Serves authenticated media data via lv-proxy
+ *  Serves authenticated video data via lv-proxy
  */
-router.get("/:semester/:courseId/:lectureName", (req, res, next) => {
+router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
   const semester = req.params.semester;
   const courseId = req.params.courseId;
   const lectureName = req.params.lectureName;
@@ -42,16 +40,22 @@ router.get("/:semester/:courseId/:lectureName", (req, res, next) => {
   logger.info(`Lecture: ${lectureName} video requested for ${courseId}:${course.name} requested by ${req.user.sub}`);
 
   const videoPath = path.join(...MEDIA_PATH, semester, course.name, lectureName, "video.mp4");
-  mediaApi.getLectureMediaData(semester, course.name, lectureName, (err, result) => {
+  sendRedirectResponse(videoPath, "video/mp4", res);
+});
+
+router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
+  const semester = req.params.semester;
+  const courseId = req.params.courseId;
+  const lectureName = req.params.lectureName;
+  const course = req.user.courses.find(course => course.id === courseId);
+
+  mediaApi.getLectureData(semester, course.name, lectureName, (err, result) => {
     if (err) {
       next(err);
     }
 
-    const data = {
-      whiteboardImages: result.whiteboard,
-      computerImages: result.computer
-    };
-
-    sendRedirectResponse(videoPath, data, res);
+    res.send(result);
   });
 });
+
+module.exports = router;

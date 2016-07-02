@@ -6,7 +6,8 @@ WORKDIR /src
 
 RUN npm install -g nodemon
 
+RUN npm install
 # don't run npm install until we have already mounted the working directory
-CMD /bin/sh -c "npm install && nodemon -L -e '.js|.sql' run start-dev"
+CMD /bin/sh -c "npm install && nodemon -L -e js,sql run start-dev"
 
 EXPOSE 3000

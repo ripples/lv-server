@@ -66,7 +66,7 @@ router.get("/", (req, res, next) => {
     logger.info(`Successfully returned course meta data for courses: ${courseIds} to User: ${req.user.sub}`);
 
     res.send(response);
-  }, reason => {
+  }).catch(reason => {
     next(reason);
   });
 });
@@ -120,7 +120,7 @@ router.post("/:semester/:id", (req, res, next) => {
     logger.info(`Successfully returned lecture meta data for course: ${courseId} to User: ${req.user.sub}`);
 
     res.send(response);
-  }, reason => {
+  }).catch(reason => {
     next(reason);
   });
 });
