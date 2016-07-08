@@ -7,7 +7,6 @@ const logger = require("../lib/logger");
 const mediaApi = require("../lib/mediaApi");
 
 const MEDIA_PATH = path.join("/api", process.env.IMAGE_MEDIA_DIR);
-const MEDIA_TYPES = ["whiteboard", "computer"];
 
 /**
  * Serves media data for lecture
@@ -28,9 +27,9 @@ function sendRedirectResponse(mediaPath, contentType, res) {
 
 /**
  * Extracts lecture info from request or throws 401 if user is unauthorized
- * @param req
- * @param res
- * @returns {{semester: (*|string|String), courseId: (*|String|string), lectureName: *, course: *}}
+ * @param {Object} req - Express Request object to extract lecture info
+ * @param {Object} res - Express Response object to send 401 response if unauthorized
+ * @return {Object} returns object wih lecture info if authorized user
  */
 function getLectureInfoOrReturn401(req, res) {
   const info = {
@@ -75,39 +74,34 @@ router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
   });
 });
 
-// TODO: does user defined media type present a vulnerability? I don't think so, but be wary
-router.get("/:semester/:courseId/:lectureName/images/:mediaType/:mediaName/thumb", (req, res, next) => {
-  const info = getLectureInfoOrReturn401(req, res);
-  const mediaType = req.params.mediaType;
-  const mediaName = req.params.mediaName;
+router.get("/:semester/:courseId/:lectureName/images/:mediaType(whiteboard|computer)/:mediaName/:imageSize(full|thumb)",
+  (req, res, next) => {
+    const info = getLectureInfoOrReturn401(req, res);
+    const mediaType = req.params.mediaType;
+    const mediaName = req.params.mediaName;
+    let imageSize = req.params.imageSize;
 
-  logger.info(`Lecture: ${info.lectureName} ${mediaType} image requested for
+    logger.info(`Lecture: ${info.lectureName} ${mediaType} image requested for
               ${info.courseId}:${info.course.name}:${mediaName} requested by ${req.user.sub}`);
 
-  const imageThumbPath = path.join(
-    MEDIA_PATH, info.semester, info.course.name, info.lectureName, mediaType, `${mediaName}-thumb.jpeg`);
+    switch (imageSize) {
+      case "full": {
+        imageSize = "";
+        break;
+      }
+      case "thumb": {
+        imageSize = "-thumb";
+        break;
+      }
+      default: {
+        throw new Error("Unknown image size request");
+      }
+    }
 
-  sendRedirectResponse(imageThumbPath, "image/png", res);
-});
+    const imageThumbPath = path.join(
+      MEDIA_PATH, info.semester, info.course.name, info.lectureName, mediaType, `${mediaName}${imageSize}.png`);
 
-// TODO: does user defined media type present a vulnerability? I don't think so, but be wary
-router.get("/:semester/:courseId/:lectureName/images/:mediaType/:mediaName/full", (req, res, next) => {
-  const info = getLectureInfoOrReturn401(req, res);
-  const mediaType = req.params.mediaType;
-  const mediaName = req.params.mediaName;
-
-  // User is requesting something that doesn't exist, possibly malicious
-  if (!MEDIA_TYPES.indexOf(mediaType) > -1) {
-    res.sendStatus(401);
-  }
-
-  logger.info(
-    `Lecture: ${info.lectureName} ${mediaType} image requested for
-    ${info.courseId}:${info.course.name}:${mediaName} requested by ${req.user.sub}`);
-
-  const imagePath = path.join(
-    MEDIA_PATH, info.semester, info.course.name, info.lectureName, mediaType, `${mediaName}.jpeg`);
-  sendRedirectResponse(imagePath, "image/png", res);
-});
+    sendRedirectResponse(imageThumbPath, "image/png", res);
+  });
 
 module.exports = router;
