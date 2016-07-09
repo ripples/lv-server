@@ -74,7 +74,7 @@ router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
   });
 });
 
-router.get("/:semester/:courseId/:lectureName/images/:mediaType(whiteboard|computer)/:mediaName/:imageSize(full|thumb)",
+router.get("/:semester/:courseId/:lectureName/images/:mediaType(whiteboard|computer)/:imageSize(full|thumb)/:mediaName",
   (req, res, next) => {
     const info = getLectureInfoOrReturn401(req, res);
     const mediaType = req.params.mediaType;
