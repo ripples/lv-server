@@ -6,10 +6,11 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
 const auth = require("./lib/auth.js");
+const logger = require("./lib/logger");
+
 const login = require("./routes/login");
 const courses = require("./routes/courses");
-const feed = require("./routes/feed");
-const logger = require("./lib/logger");
+const media = require("./routes/media");
 
 const app = express();
 
@@ -23,7 +24,7 @@ app.use("/api/v1/login", login);
 // authenticated routes
 app.use(auth);
 app.use("/api/v1/courses", courses);
-app.use("/api/v1/feed", feed);
+app.use("/api/v1/media", media);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

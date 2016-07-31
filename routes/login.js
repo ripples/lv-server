@@ -7,6 +7,7 @@ const njwt = require("njwt");
 
 const database = require("../lib/database");
 const logger = require("../lib/logger");
+const ERRORS = require("../lib/errors");
 
 const SIGNING_KEY = process.env.SIGNING_KEY;
 
@@ -14,7 +15,7 @@ const SIGNING_KEY = process.env.SIGNING_KEY;
 router.post("/", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-
+  
   database.getIdAndHashFromEmail(email, (err, result) => {
     logger.info(`${email} attempting to authenticate`);
     if (err) {
@@ -34,9 +35,11 @@ router.post("/", (req, res, next) => {
             }
           });
         } else {
-          const err = new Error("Invalid email or password");
-          err.status = 403;
-          next(err);
+          // need to end the conection here, otherwise the error message is switched
+          const code = 403;
+          const message = ERRORS.LOGIN_EMAIL_PASS_FAILED;
+          res.writeHead(code, message, {"content-type": "text/plain"});
+          res.end(message);
         }
       });
     } else {
@@ -65,7 +68,6 @@ function generateUserJwt(id, callback) {
           };
         })
       };
-
       const jwt = njwt.create(claims, SIGNING_KEY);
       callback(null, jwt.compact());
     }

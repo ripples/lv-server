@@ -4,7 +4,7 @@ COPY . /src
 
 WORKDIR /src
 
-RUN npm install
+RUN npm install --prod
 
 CMD ["npm", "start"]
 
