@@ -60,7 +60,6 @@ router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
 
 router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
   const info = getLectureInfoOrReturn401(req, res);
-
   logger.info(
     `Lecture: ${info.lectureName} image meta data requested for
     ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);

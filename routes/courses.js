@@ -100,12 +100,7 @@ router.post("/:semester/:id", (req, res, next) => {
         if (err) {
           reject(err);
         }
-        resolve({
-          startTimestamp: result.timestamp,
-          duration: result.duration,
-          whiteboardCount: result.whiteboard_count,
-          computerCount: result.computer_count
-        });
+        resolve(result);
       });
     });
   });
