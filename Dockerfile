@@ -7,5 +7,3 @@ WORKDIR /src
 RUN npm install --prod
 
 CMD ["npm", "start"]
-
-EXPOSE 3000
