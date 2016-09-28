@@ -5,7 +5,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
-const auth = require("./lib/auth.js");
+const auth = require("./lib/auth");
 const logger = require("./lib/logger");
 
 const login = require("./routes/login");

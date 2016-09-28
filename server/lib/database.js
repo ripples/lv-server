@@ -14,7 +14,7 @@ const pool = mysql.createPool({
   database: process.env.MYSQL_DATABASE
 });
 
-const queries = loadQueriesPromise("sql");
+const queries = loadQueriesPromise("./server/sql");
 
 /**
  * Loads queries from given directory
