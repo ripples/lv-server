@@ -6,7 +6,7 @@ winston.transports.DailyRotateFile = require('winston-daily-rotate-file');
 var logger = new winston.Logger({
   transports: [
     new winston.transports.DailyRotateFile({
-      filename: './logs/log.log',
+      filename: './server/logs/log',
       handleExceptions: true,
       prettyPrint: true,
       json: false,

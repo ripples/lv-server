@@ -5,7 +5,6 @@ const router = require("express").Router();
 const database = require("../lib/database");
 const logger = require("../lib/logger");
 const mediaApi = require("../lib/mediaApi");
-const Errors = require("../lib/errors");
 
 /**
  * Serves meta data for course

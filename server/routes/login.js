@@ -36,10 +36,8 @@ router.post("/", (req, res, next) => {
           });
         } else {
           // need to end the conection here, otherwise the error message is switched
-          const code = 403;
-          const message = ERRORS.LOGIN_EMAIL_PASS_FAILED;
-          res.writeHead(code, message, {"content-type": "text/plain"});
-          res.end(message);
+          res.writeHead(403, message, {"content-type": "text/plain"});
+          res.end(ERRORS.INVALID_AUTH_INFO);
         }
       });
     } else {
