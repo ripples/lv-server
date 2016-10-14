@@ -35,13 +35,15 @@ router.post("/", (req, res, next) => {
             }
           });
         } else {
-          // need to end the conection here, otherwise the error message is switched
-          res.writeHead(403, message, {"content-type": "text/plain"});
-          res.end(ERRORS.INVALID_AUTH_INFO);
+          res.status(401).json({
+            error: ERRORS.INVALID_AUTH_INFO
+          });
         }
       });
     } else {
-      res.sendStatus(401);
+      res.status(401).json({
+        error: ERRORS.INVALID_AUTH_INFO
+      })
     }
   });
 });
