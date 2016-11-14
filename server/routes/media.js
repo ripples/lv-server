@@ -5,8 +5,9 @@ const path = require("path");
 
 const logger = require("../lib/logger");
 const mediaApi = require("../lib/mediaApi");
+const constants = require("../utils/constants");
 
-const MEDIA_PATH = path.join("/api", process.env.IMAGE_MEDIA_DIR);
+const MEDIA_PATH = path.join("/api", constants.CONTAINER_MEDIA_DIR);
 
 /**
  * Serves media data for lecture
