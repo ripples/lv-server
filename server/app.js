@@ -26,35 +26,31 @@ app.use(auth);
 app.use("/api/v1/courses", courses);
 app.use("/api/v1/media", media);
 
-// catch 404 and forward to error handler
-app.use((req, res, next) => {
-  const err = new Error("Not Found");
-  err.status = 404;
-  next(err);
+// Error Handler
+app.use((err, req, res, next) => {
+  const status = err.status ? err.status : 500;
+
+  if (status >= 400) {
+    logger.error(`Request headers: ${JSON.stringify(req.headers)}`);
+    logger.error(`Request parameters: ${JSON.stringify(req.params)}`);
+  }
+
+  if (status >= 500 || process.env.NODE_ENV === 'development') {
+    logger.error(err.stack);
+  }
+
+  let response = null;
+  if (status >= 500) {
+    response = {error: "Something went wrong"}
+  } else {
+    response = {error: err.message};
+    if (err.data) {
+      response.errors = err.data;
+    }
+  }
+
+  res.status(status).json(response);
 });
 
-// development error handler
-// will print stacktrace
-if (app.get("env") === "development") {
-  app.use((err, req, res) => {
-    res.status(err.status || 500);
-    logger.error(err.message);
-    res.send({
-      message: err.message,
-      error: err
-    });
-  });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use((err, req, res) => {
-  res.status(err.status || 500);
-  logger.error(err.message);
-  res.send({
-    message: err.message,
-    error: {}
-  });
-});
 
 module.exports = app;

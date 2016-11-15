@@ -1,84 +1,69 @@
 "use strict";
 
-const http = require("http");
+const fetch = require("node-fetch");
 
 const logger = require("./logger");
 
-const httpAgent = new http.Agent({keepAlive: true});
-
-const OPTIONS = {
-  hostname: "lv-media",
-  port: process.env.MEDIA_SERVER_PORT,
-  agent: httpAgent
-};
-
 /**
- * Process lv-media request data
- * @param {Object} res - response object
- * @param {Function} complete - callback on completion
+ * Makes GET request to media server
+ * @param {String} route - media server route to request
+ * @return {Promise} - promise of result
  */
-function processData(res, complete) {
-  let data = "";
-
-  res.on("data", chunk => {
-    data += chunk;
-  });
-
-  res.on("end", () => {
-    complete(JSON.parse(data));
+function request(route) {
+  const requestUrl = encodeURI(`http://${process.env.MEDIA_HOSTNAME}:${process.env.MEDIA_SERVER_PORT}/${route}`);
+  logger.info(`GET/ ${requestUrl}`);
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  return new Promise((resolve, reject) => {
+    let status = 0;
+    fetch(requestUrl, "GET", headers)
+      .then(response => {
+        status = response.status;
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          let err = new Error(data.error);
+          err.status = status == 404 ? 404 : 500;
+          throw err;
+        }
+        resolve(data)
+      })
+      .catch(reject);
   });
 }
 
 /**
  * GET lv-media/course
- * @param {String} courseName - course name
- * @param {Function} callback - callback result, called as callback(err, result)
+ * @param {String} currentSemester - current semester
+ * @param {String} courseId - course name
+ * @return {Promise} - promise of result
  */
-function getLectures(courseName, callback) {
-  const options = Object.assign(OPTIONS, {
-    path: `${process.env.SEMESTER}/${courseName}`
-  });
-  logger.info(`GET/ ${options.path}`);
-  const request = http.get(options, res => processData(res, data => callback(null, data)));
-  request.setTimeout(5000, () => {
-    callback(`Request to ${options.hostname}/${options.path} timed out`);
-  });
+function getLectures(currentSemester, courseId) {
+  return request(`${currentSemester}/${courseId}`);
 }
 
 /**
  * GET lv-media/course/lectures
  * @param {String} semester - semester
- * @param {String} courseName - course name
+ * @param {String} courseId - course id
  * @param {String} lectureName - lecture name
- * @param {Function} callback - callback result, called as callback(err, result)
+ * @return {Promise} - promise of result
  */
-function getLectureMetaData(semester, courseName, lectureName, callback) {
-  const options = Object.assign(OPTIONS, {
-    path: `${semester}/${courseName}/${lectureName}`
-  });
-
-  const require = http.get(options, res => processData(res, data => callback(null, data)));
-  require.setTimeout(5000, () => {
-    callback(`Request to ${options.hostname}/${options.path} timed out`);
-  });
+function getLectureMetaData(semester, courseId, lectureName) {
+  return request(`${semester}/${courseId}/${lectureName}`);
 }
 
 /**
  * GET lv-media/course/lectures
  * @param {String} semester - semester
- * @param {String} courseName - course name
+ * @param {String} courseId - course name
  * @param {String} lectureName - lecture name
- * @param {Function} callback - callback result, called as callback(err, result)
+ * @return {Promise} - promise of result
  */
-function getLectureData(semester, courseName, lectureName, callback) {
-  const options = Object.assign(OPTIONS, {
-    path: `${semester}/${courseName}/${lectureName}/data`
-  });
-
-  const require = http.get(options, res => processData(res, data => callback(null, data)));
-  require.setTimeout(5000, () => {
-    callback(`Request to ${options.hostname}/${options.path} timed out`);
-  });
+function getLectureData(semester, courseId, lectureName) {
+  return request(`${semester}/${courseId}/${lectureName}/data`);
 }
 
 module.exports = {

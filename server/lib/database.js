@@ -14,14 +14,19 @@ const pool = mysql.createPool({
   database: process.env.MYSQL_DATABASE
 });
 
-const queries = loadQueriesPromise("./server/sql");
+const queries = loadQueries("./server/sql");
+let currentSemester = {
+  id: "",
+  startEpoch: 0,
+  endEpoch: 0
+};
 
 /**
  * Loads queries from given directory
  * @param {String} pathName - directory to load from
  * @return {Object} - map of queries
  */
-function loadQueriesPromise(pathName) {
+function loadQueries(pathName) {
   const queries = {};
   fs.readdir(pathName, (err, files) => {
     if (err) {
@@ -49,27 +54,58 @@ function loadQueriesPromise(pathName) {
 }
 
 /**
- *
- * @param {Object} err - error to be thrown
- * @param {Function} callback - Called on success or error returns (err, result)
- * @param {Object} result - result to be returned in callback
+ * Returns promise of query
+ * @param {String} query - sql query
+ * @param {Array<*>} [args] - list of arguments
+ * @return {Promise} - promise of result
  */
-function handleResult(err, callback, result) {
-  if (err) {
-    logger.error(err.message);
-    callback(err);
-  } else if (result.length === 1) {
-    callback(null, result[0]);
-  } else {
-    callback(null, result);
-  }
+function query(query, args) {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, connection) => {
+      if (err) {
+        logger.error(err.message);
+        reject(err);
+        return;
+      }
+      connection.query(query, args,
+        (err, result) => {
+          if (err) {
+            reject(err);
+          } else if (Object.keys(result).length === 1) {
+            resolve(result[0])
+          } else {
+            resolve(result);
+          }
+        });
+      connection.release();
+    });
+  });
+}
+
+/**
+ * Gets current semester
+ * @return {Promise} - promise of result
+ */
+function getCurrentSemester() {
+  return new Promise((resolve, reject) => {
+    if (currentSemester.endEpoch > new Date().getTime()) {
+      resolve(currentSemester.id);
+      return;
+    }
+    logger.info(`Current semester(${currentSemester.id}) cache of date is invalid 
+    with end date ${new Date(currentSemester.endEpoch)}, resolving to latest db entry`);
+    query(queries["current-semester"]).then(result => {
+      currentSemester = result;
+      resolve(currentSemester.id);
+    }).catch(reject);
+  });
 }
 
 /**
  *
  * @param {String} email - user email
- * @param {Function} callback - Called on success or error returns (err, result)
- * result Object consists of one row, has structure:
+ * @return {Promise} - promise of result
+ * success Object consists of one row, has structure:
  * [
  *  {
  *    id: number,
@@ -77,26 +113,18 @@ function handleResult(err, callback, result) {
  *  }
  * ]
  */
-function getIdAndHashFromEmail(email, callback) {
-  pool.getConnection((err, connection) => {
-    if (err) {
-      logger.error(err.message);
-      callback(err);
-    } else {
-      connection.query(queries["id-and-hash-from-email"],
-        [email],
-        (err, result) => {
-          handleResult(err, callback, result);
-          connection.release();
-        });
-    }
+function getIdAndHashFromEmail(email) {
+  return new Promise((resolve, reject) => {
+    query(queries["id-and-hash-from-email"], [email])
+      .then(resolve)
+      .catch(reject);
   });
 }
 
 /**
  *
  * @param {Number} id - user id
- * @param {Function} callback - Called on success or error returns (err, result)
+ * @return {Promise} - promise of result
  * result Object consists of many rows, has structure:
  * [
  *  {
@@ -105,26 +133,20 @@ function getIdAndHashFromEmail(email, callback) {
  *  ...
  * ]
  */
-function getCoursesFromUserId(id, callback) {
-  pool.getConnection((err, connection) => {
-    if (err) {
-      logger.error(err.message);
-      callback(err);
-    } else {
-      connection.query(queries["courses-from-user-id"],
-        [id, process.env.SEMESTER],
-        (err, result) => {
-          handleResult(err, callback, result);
-          connection.release();
-        });
-    }
+function getCoursesFromUserId(id) {
+  return new Promise((resolve, reject) => {
+    getCurrentSemester().then(semester => {
+      query(queries["courses-from-user-id"], [id, semester])
+        .then(resolve)
+        .catch(reject);
+    }).catch(reject);
   });
 }
 
 /**
  *
  * @param {Array.<Number>} courseIds - list of course ids
- * @param {Function} callback - Called on success or error returns (err, result)
+ * @return {Promise} - promise of result
  * result Object consists of many rows, has structure:
  * [
  *  {
@@ -139,41 +161,11 @@ function getCoursesFromUserId(id, callback) {
  *  ...
  * ]
  */
-function getCourseListMetaData(courseIds, callback) {
-  pool.getConnection((err, connection) => {
-    if (err) {
-      logger.error(err.message);
-      callback(err);
-    } else {
-      connection.query(queries["course-list-meta-data"],
-        [courseIds, courseIds],
-        (err, result) => {
-          handleResult(err, callback, result);
-          connection.release();
-        });
-    }
-  });
-}
-
-/**
- * @param {String} searchContent - string with the content to search
- * @oaram {String} userId - only search on te courses related to the user
- * @param {String} courseId - optional paramenter for the search - case == 0 search in all courses
- * @param {Function} callback - callback to execute when the query completes
- */
-function getSearchResult(searchContent, userId, courseId = 0, callback) {
-  pool.getConnection((err, connection) => {
-    if (err) {
-      logger.error(err.message);
-      callback(err);
-    } else {
-      connection.query(queries["search-feed-result"],
-        [searchContent, searchContent, searchContent, userId],
-        (err, result) => {
-          handleResult(err, callback, result);
-        });
-    }
-    connection.release();
+function getCourseListMetaData(courseIds) {
+  return new Promise((resolve, reject) => {
+    query(queries["course-list-meta-data"], [courseIds, courseIds])
+      .then(resolve)
+      .catch(reject);
   });
 }
 
@@ -181,5 +173,5 @@ module.exports = {
   getCourseListMetaData: getCourseListMetaData,
   getIdAndHashFromEmail: getIdAndHashFromEmail,
   getCoursesFromUserId: getCoursesFromUserId,
-  getSearchResult: getSearchResult
+  getCurrentSemester: getCurrentSemester
 };

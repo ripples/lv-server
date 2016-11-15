@@ -20,7 +20,6 @@ const MEDIA_PATH = path.join("/api", constants.CONTAINER_MEDIA_DIR);
  * @param {Object} res - response object
  */
 function sendRedirectResponse(mediaPath, contentType, res) {
-  console.log(mediaPath);
   res.setHeader("X-Accel-Redirect", mediaPath);
   res.setHeader("Content-Type", contentType);
   res.end();
@@ -55,7 +54,7 @@ router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
     `Lecture: ${info.lectureName} video requested for
     ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
 
-  const videoPath = path.join(MEDIA_PATH, info.semester, info.course.name, info.lectureName, "video.mp4");
+  const videoPath = path.join(MEDIA_PATH, info.semester, info.course.id, info.lectureName, "video.mp4");
   sendRedirectResponse(videoPath, "video/mp4", res);
 });
 
@@ -65,13 +64,9 @@ router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
     `Lecture: ${info.lectureName} image meta data requested for
     ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
 
-  mediaApi.getLectureData(info.semester, info.course.name, info.lectureName, (err, result) => {
-    if (err) {
-      next(err);
-    }
-
-    res.send(result);
-  });
+  mediaApi.getLectureData(info.semester, info.course.id, info.lectureName)
+    .then(res.send)
+    .catch(next);
 });
 
 router.get("/:semester/:courseId/:lectureName/images/:mediaType(whiteboard|computer)/:imageSize(full|thumb)/:mediaName",
@@ -99,7 +94,7 @@ router.get("/:semester/:courseId/:lectureName/images/:mediaType(whiteboard|compu
     }
 
     const imageThumbPath = path.join(
-      MEDIA_PATH, info.semester, info.course.name, info.lectureName, mediaType, `${mediaName}${imageSize}.png`);
+      MEDIA_PATH, info.semester, info.course.id, info.lectureName, mediaType, `${mediaName}${imageSize}.png`);
 
     sendRedirectResponse(imageThumbPath, "image/png", res);
   });
