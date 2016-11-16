@@ -29,7 +29,6 @@ app.use("/api/v1/media", media);
 // Error Handler
 app.use((err, req, res, next) => {
   const status = err.status ? err.status : 500;
-
   if (status >= 400) {
     logger.error(`Request headers: ${JSON.stringify(req.headers)}`);
     logger.error(`Request parameters: ${JSON.stringify(req.params)}`);
