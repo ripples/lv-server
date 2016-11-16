@@ -17,20 +17,17 @@ function request(route) {
   };
   return new Promise((resolve, reject) => {
     let status = 0;
-    fetch(requestUrl, "GET", headers)
-      .then(response => {
+    fetch(requestUrl, "GET", headers).then(response => {
         status = response.status;
         return response.json();
-      })
-      .then(data => {
+      }).then(data => {
         if (data.error) {
           let err = new Error(data.error);
           err.status = status == 404 ? 404 : 500;
           throw err;
         }
         resolve(data)
-      })
-      .catch(reject);
+      }).catch(reject);
   });
 }
 

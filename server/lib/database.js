@@ -169,9 +169,82 @@ function getCourseListMetaData(courseIds) {
   });
 }
 
+/**
+ * Sets password hash
+ * @param {String} email - user email
+ * @param {String} passwordHash - hashed password
+ * @return {Promise} - promise of result
+ */
+function updatePasswordHash(email, passwordHash) {
+  return new Promise((resolve, reject) => {
+    query(queries["update-password"], [passwordHash, email])
+      .then(() => resolve({success: true}))
+      .catch(reject);
+  });
+}
+
+/**
+ * Gets token hash for given email
+ * @param {String} email - user email
+ * @return {Promise} - promise of result
+ */
+function getResetHashForEmail(email) {
+  return new Promise((resolve, reject) => {
+    query(queries["get-reset-hash-for-email"], [email])
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
+ * Invalidates all reset token hashes for given email
+ * @param {String} email - user email
+ * @return {Promise} - promise of result
+ */
+function invalidateResetHashesForEmail(email) {
+  return new Promise((resolve, reject) => {
+    query(queries["invalidate-reset-hashes-for-email"], [email])
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
+ * Invalidates reset token has for given row id
+ * @param {String} rowId - row id in db
+ * @return {Promise} - promise of result
+ */
+function invalidateResetHashForId(rowId) {
+  return new Promise((resolve, reject) => {
+    query(queries["invalidate-reset-hash-for-id"], [rowId])
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+
+/**
+ * Inserts a reset token hash for given email
+ * @param {String} email - user email
+ * @param {String} hash - hashed token
+ * @return {Promise} - promise of result
+ */
+function insertResetHashForEmail(email, hash) {
+  return new Promise((resolve, reject) => {
+    query(queries["insert-reset-hash-for-email"], [hash, email])
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
 module.exports = {
   getCourseListMetaData: getCourseListMetaData,
   getIdAndHashFromEmail: getIdAndHashFromEmail,
   getCoursesFromUserId: getCoursesFromUserId,
-  getCurrentSemester: getCurrentSemester
+  getCurrentSemester: getCurrentSemester,
+  updatePasswordHash: updatePasswordHash,
+  getResetHashForEmail: getResetHashForEmail,
+  invalidateResetHashesForEmail: invalidateResetHashesForEmail,
+  insertResetHashForEmail: insertResetHashForEmail,
+  invalidateResetHashForId: invalidateResetHashForId
 };
