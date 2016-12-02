@@ -24,7 +24,7 @@ Somebody (hopefully you) requested a new password for the Lecture Viewer account
 
 You can reset your password by clicking the link below:
 
-${baseUrl}/reset?token=${resetToken}
+${baseUrl}/reset?token=${resetToken}&email=${email}
 
 If you did not request a new password, please let us know immediately by replying to this email.
 
