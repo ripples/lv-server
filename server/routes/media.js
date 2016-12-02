@@ -54,7 +54,7 @@ router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
     `Lecture: ${info.lectureName} video requested for
     ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
 
-  const videoPath = path.join(MEDIA_PATH, info.semester, info.course.id, info.lectureName, "video.mp4");
+  const videoPath = path.join(MEDIA_PATH, info.semester, info.course.id, info.lectureName, "videoLarge.mp4");
   sendRedirectResponse(videoPath, "video/mp4", res);
 });
 

@@ -42,7 +42,7 @@ router.post("/forgot", (req, res, next) => {
       if (err) {
         return next(err);
       }
-      const token = tokenBuf.toString('base64');
+      const token = tokenBuf.toString('hex');
       hashString(token).then(hash => {
         database.insertResetHashForEmail(email, hash).then(() => {
           mailer.sendPasswordReset(email, token).then(() => {

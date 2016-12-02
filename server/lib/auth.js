@@ -17,6 +17,7 @@ module.exports = (req, res, next) => {
       } else {
         // token is Gucci!
         req.user = ver.body;
+        next();
       }
     });
   } else {

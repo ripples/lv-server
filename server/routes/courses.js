@@ -97,8 +97,8 @@ router.post("/:semester/:id", (req, res, next) => {
   const promises = lectures.map(lecture => {
     return new Promise((resolve, reject) => {
       mediaApi.getLectureMetaData(semester, course.id, lecture)
-        .then(result => resolve(result))
-        .catch(reason => reject(reason));
+        .then(resolve)
+        .catch(reject);
     });
   });
 
