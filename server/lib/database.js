@@ -4,7 +4,7 @@ const mysql = require("mysql");
 const fs = require("fs");
 const path = require("path");
 
-const logger = require("./logger");
+const logger = require("./logger").logger;
 
 const pool = mysql.createPool({
   connectionLimit: 10,
@@ -84,7 +84,7 @@ function query(query, args) {
 
 /**
  * Gets current semester
- * @return {Promise} - promise of result
+ * @return {Promise<string>} - promise of result
  */
 function getCurrentSemester() {
   return new Promise((resolve, reject) => {
@@ -188,22 +188,22 @@ function updatePasswordHash(email, passwordHash) {
  * @param {String} email - user email
  * @return {Promise} - promise of result
  */
-function getResetHashForEmail(email) {
+function getHashIdFromEmail(email) {
   return new Promise((resolve, reject) => {
-    query(queries["get-reset-hash-for-email"], [email])
+    query(queries["get-hash-id-from-email"], [email])
       .then(resolve)
       .catch(reject);
   });
 }
 
 /**
- * Invalidates all reset token hashes for given email
+ * Invalidates all reset token ids for given email
  * @param {String} email - user email
  * @return {Promise} - promise of result
  */
-function invalidateResetHashesForEmail(email) {
+function invalidateResetIdsForEmail(email) {
   return new Promise((resolve, reject) => {
-    query(queries["invalidate-reset-hashes-for-email"], [email])
+    query(queries["invalidate-reset-ids-for-email"], [email])
       .then(resolve)
       .catch(reject);
   });
@@ -214,9 +214,9 @@ function invalidateResetHashesForEmail(email) {
  * @param {String} rowId - row id in db
  * @return {Promise} - promise of result
  */
-function invalidateResetHashForId(rowId) {
+function invalidateResetIdForId(rowId) {
   return new Promise((resolve, reject) => {
-    query(queries["invalidate-reset-hash-for-id"], [rowId])
+    query(queries["invalidate-reset-id-for-id"], [rowId])
       .then(resolve)
       .catch(reject);
   });
@@ -226,25 +226,24 @@ function invalidateResetHashForId(rowId) {
 /**
  * Inserts a reset token hash for given email
  * @param {String} email - user email
- * @param {String} hash - hashed token
  * @return {Promise} - promise of result
  */
-function insertResetHashForEmail(email, hash) {
+function insertResetIdForEmail(email) {
   return new Promise((resolve, reject) => {
-    query(queries["insert-reset-hash-for-email"], [hash, email])
+    query(queries["insert-reset-id-for-email"], [email])
       .then(resolve)
       .catch(reject);
   });
 }
 
 module.exports = {
-  getCourseListMetaData: getCourseListMetaData,
-  getIdAndHashFromEmail: getIdAndHashFromEmail,
-  getCoursesFromUserId: getCoursesFromUserId,
-  getCurrentSemester: getCurrentSemester,
-  updatePasswordHash: updatePasswordHash,
-  getResetHashForEmail: getResetHashForEmail,
-  invalidateResetHashesForEmail: invalidateResetHashesForEmail,
-  insertResetHashForEmail: insertResetHashForEmail,
-  invalidateResetHashForId: invalidateResetHashForId
+  getCourseListMetaData,
+  getIdAndHashFromEmail,
+  getCoursesFromUserId,
+  getCurrentSemester,
+  updatePasswordHash,
+  getHashIdFromEmail,
+  invalidateResetIdsForEmail,
+  insertResetIdForEmail,
+  invalidateResetIdForId
 };

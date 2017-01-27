@@ -20,11 +20,11 @@ const transporter = nodemailer.createTransport({
  */
 function sendPasswordReset(email, resetToken) {
   const resetText = `
-Somebody (hopefully you) requested a new password for the Lecture Viewer account for ${email}.
+Somebody (hopefully you) requested a new password for your Lecture Viewer account.
 
 You can reset your password by clicking the link below:
 
-${baseUrl}/reset?token=${resetToken}&email=${email}
+${baseUrl}/reset?token=${resetToken}
 
 If you did not request a new password, please let us know immediately by replying to this email.
 
@@ -37,7 +37,7 @@ The Lecture Viewer team
       to: email,
       from: "Lecture Viewer",
       subject: "Password Reset",
-      text: resetText
+      html: resetText
     };
     transporter.sendMail(mailOptions, (error, response) => {
       if (error) {
@@ -50,5 +50,5 @@ The Lecture Viewer team
 }
 
 module.exports = {
-  sendPasswordReset: sendPasswordReset
+  sendPasswordReset
 };

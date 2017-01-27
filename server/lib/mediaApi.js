@@ -1,8 +1,9 @@
 "use strict";
 
 const fetch = require("node-fetch");
+const co = require("co");
 
-const logger = require("./logger");
+const logger = require("./logger").logger;
 
 /**
  * Makes GET request to media server
@@ -12,22 +13,17 @@ const logger = require("./logger");
 function request(route) {
   const requestUrl = encodeURI(`http://${process.env.MEDIA_HOSTNAME}:${process.env.MEDIA_SERVER_PORT}/${route}`);
   logger.info(`GET/ ${requestUrl}`);
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  return new Promise((resolve, reject) => {
-    let status = 0;
-    fetch(requestUrl, "GET", headers).then(response => {
-        status = response.status;
-        return response.json();
-      }).then(data => {
-        if (data.error) {
-          let err = new Error(data.error);
-          err.status = status == 404 ? 404 : 500;
-          throw err;
-        }
-        resolve(data)
-      }).catch(reject);
+  return co(function* () {
+    const response = yield fetch(requestUrl, "GET", {
+      "Content-Type": "application/json"
+    });
+    const status = response.status;
+    const data = yield response.json();
+    if (data.error) {
+      let err = new Error(data.error);
+      err.status = status == 404 ? 404 : 500;
+      throw err;
+    }
   });
 }
 
@@ -41,16 +37,6 @@ function getLectures(currentSemester, courseId) {
   return request(`${currentSemester}/${courseId}`);
 }
 
-/**
- * GET lv-media/course/lectures
- * @param {String} semester - semester
- * @param {String} courseId - course id
- * @param {String} lectureName - lecture name
- * @return {Promise} - promise of result
- */
-function getLectureMetaData(semester, courseId, lectureName) {
-  return request(`${semester}/${courseId}/${lectureName}`);
-}
 
 /**
  * GET lv-media/course/lectures
@@ -65,6 +51,5 @@ function getLectureData(semester, courseId, lectureName) {
 
 module.exports = {
   getLectures: getLectures,
-  getLectureData: getLectureData,
-  getLectureMetaData: getLectureMetaData
+  getLectureData: getLectureData
 };
