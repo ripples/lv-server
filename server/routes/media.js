@@ -3,7 +3,7 @@
 const router = require("express").Router();
 const path = require("path");
 
-const logger = require("../lib/logger");
+const logger = require("../lib/logger").logger;
 const mediaApi = require("../lib/mediaApi");
 const constants = require("../utils/constants");
 

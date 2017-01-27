@@ -5,23 +5,22 @@
  */
 
 const ERRORS = {
-  EMAIL_REQUIRED: "Email required",
-  INVALID_AUTH_INFO: "Invalid email or password",
-  RESET_TOKEN_INVALID: "Reset token is invalid",
-  TOKEN_EXPIRED: "Token expired",
-  UNAUTHORIZED_ACCESS: "Unauthorized access"
+  EMAIL_REQUIRED: ["Email required", 400],
+  INVALID_AUTH_INFO: ["Invalid email or password", 400],
+  RESET_TOKEN_INVALID: ["Reset token is invalid", 401],
+  TOKEN_EXPIRED: ["Token expired", 401],
+  UNAUTHORIZED_ACCESS: ["Unauthorized access", 401]
 
 };
 
 /**
  * Creates new Error
- * @param {String} message - error message
- * @param {Number} status - status code
+ * @param {Array} error - error message
  * @param {Function} next - next express callback
  */
-function sendError(message, status, next) {
-  let err = new Error(message);
-  err.status = status;
+function sendError(error, next) {
+  let err = new Error(error[0]);
+  err.status = error[1];
   next(err);
 }
 
