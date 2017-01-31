@@ -1,7 +1,8 @@
 "use strict";
 
-const njwt = require("njwt");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const moment = require("moment");
 
 const errors = require("./errors");
 const database = require("./database");
@@ -14,26 +15,25 @@ function middleware(req, res, next) {
   if (!token) {
     return errors.sendError(errors.ERRORS.UNAUTHORIZED_ACCESS, next);
   }
-  njwt.verify(token, SIGNING_KEY, (err, ver) => {
+  jwt.verify(token, SIGNING_KEY, {algorithms: ["HS256"]}, (err, decodedToken) => {
     if (err) {
-      // token is expired
+      //TODO: handle each jwt error
       return errors.sendError(errors.ERRORS.TOKEN_EXPIRED, next);
     } else {
-      // token is Gucci!
-      req.user = ver.body;
+      req.user = decodedToken;
       next();
     }
   });
 }
 
+// TODO: throw error
 function unHashJwtToken(token) {
   return new Promise((resolve, reject) => {
-    njwt.verify(token, SIGNING_KEY, (err, ver) => {
+    jwt.verify(token, SIGNING_KEY, (err, decodedToken) => {
       if (err) {
-        // token is expired
         reject(errors.ERRORS.TOKEN_EXPIRED);
       }
-      resolve(ver.body);
+      resolve(decodedToken);
     });
   })
 }
@@ -48,7 +48,8 @@ function generateEmailJwt(email, id) {
   const claims = {
     iss: "Lecture Viewer",
     sub: email,
-    tokenId: id
+    tokenId: id,
+    exp: moment.utc().add(moment.duration(2, "hours")).valueOf()
   };
   return _createJwtToken(claims);
 }
@@ -117,7 +118,7 @@ function verifyStringAgainstHash(string, hash) {
 }
 
 function _createJwtToken(claims) {
-  return njwt.create(claims, SIGNING_KEY).compact();
+  return jwt.sign(claims, SIGNING_KEY);
 }
 
 module.exports = {

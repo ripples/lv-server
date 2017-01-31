@@ -9,4 +9,4 @@ COPY . /src
 
 WORKDIR /src
 
-CMD ["nodemon", "-L", "-e", "js,sql", "run", "start-dev"]
+CMD ["nodemon", "-L", "-e", "js,sql,ejs,html", "run", "start-dev"]
