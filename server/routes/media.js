@@ -3,8 +3,8 @@
 const router = require("express").Router();
 const path = require("path");
 
-const logger = require("../lib/logger").logger;
-const mediaApi = require("../lib/mediaApi");
+const logger = require("../libs/logger").logger;
+const mediaApi = require("../libs/mediaApi");
 const constants = require("../utils/constants");
 
 const MEDIA_PATH = path.join("/api", constants.CONTAINER_MEDIA_DIR);

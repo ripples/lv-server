@@ -25,6 +25,6 @@ function sendError(error, next) {
 }
 
 module.exports = {
-  ERRORS: ERRORS,
-  sendError: sendError
+  ERRORS,
+  sendError
 };

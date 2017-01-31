@@ -3,24 +3,32 @@
 const express = require("express");
 const router = express.Router();
 const co = require("co");
+const util = require("util");
+const moment = require("moment");
 
-const database = require("../lib/database");
-const logger = require("../lib/logger").logger;
-const errors = require("../lib/errors");
-const mailer = require("../lib/mailer");
-const auth = require("../lib/auth");
+const database = require("../libs/database");
+const logger = require("../libs/logger").logger;
+const errors = require("../libs/errors");
+const mailer = require("../libs/mailer");
+const auth = require("../libs/auth");
 
 
 // login
 router.post("/", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
+  if (!email || !password) {
+    return errors.sendError(errors.ERRORS.EMAIL_REQUIRED, next);
+  }
+
   logger.info(`${email} attempting to authenticate`);
   co(function* () {
     const result = yield database.getIdAndHashFromEmail(email);
-    yield auth.verifyStringAgainstHash(password, result.password).catch(() => {
-      errors.sendError(errors.ERRORS.INVALID_AUTH_INFO, next)
-    });
+    try {
+      yield auth.verifyStringAgainstHash(password, result.password)
+    } catch (e) {
+      return errors.sendError(errors.ERRORS.INVALID_AUTH_INFO, next);
+    }
     const token = yield auth.generateUserJwt(result.id);
     logger.info(`${email} successfully authenticated`);
     res.send({token: token})
@@ -35,9 +43,14 @@ router.post("/forgot", (req, res, next) => {
   }
   co(function *() {
     yield database.invalidateResetIdsForEmail(email);
-    const id = (yield database.insertResetIdForEmail(email)).insertId;
-    const token = auth.generateEmailJwt(email, id);
-    yield mailer.sendPasswordReset(email, token);
+    const userId = (yield database.getIdAndHashFromEmail(email)).id;
+
+    // We don't want to tell them if they entered an invalid email
+    if (!util.isNullOrUndefined(userId)) {
+      const id = (yield database.insertResetIdForEmail(email)).insertId;
+      const token = auth.generateEmailJwt(email, id);
+      yield mailer.sendPasswordReset(email, req.useragent, token);
+    }
     res.send({
       message: "success"
     });
@@ -48,15 +61,15 @@ router.post("/reset", (req, res, next) => {
   const token = req.body.token;
   const password = req.body.password;
   co(function *() {
-    const jwtToken = yield auth.unHashJwtToken(token);
-    const email = jwtToken.email;
+    const jwt = yield auth.unHashJwtToken(token);
+    const email = jwt.sub;
     const storedTokenId = (yield database.getHashIdFromEmail(email)).id;
-    if (storedTokenId !== jwtToken.id) {
-      errors.sendError(errors.ERRORS.RESET_TOKEN_INVALID, next);
+    if (storedTokenId !== jwt.tokenId || moment.utc(jwt.exp).isAfter(moment.utc())) {
+      return errors.sendError(errors.ERRORS.RESET_TOKEN_INVALID, next);
     }
 
-    const hashedPassword = yield auth.hashString(password);
     yield database.invalidateResetIdForId(storedTokenId);
+    const hashedPassword = yield auth.hashString(password);
     yield database.updatePasswordHash(email, hashedPassword);
     res.send({
       message: "success"

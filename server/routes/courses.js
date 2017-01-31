@@ -4,9 +4,9 @@ const router = require("express").Router();
 const co = require("co");
 const _ = require("lodash");
 
-const database = require("../lib/database");
-const logger = require("../lib/logger").logger;
-const mediaApi = require("../lib/mediaApi");
+const database = require("../libs/database");
+const logger = require("../libs/logger").logger;
+const mediaApi = require("../libs/mediaApi");
 
 /**
  * Serves meta data for course
