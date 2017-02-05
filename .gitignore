@@ -18,3 +18,6 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+
+# Logs folder and associated logs
+logs/
