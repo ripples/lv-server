@@ -64,7 +64,7 @@ router.post("/reset", (req, res, next) => {
     const jwt = yield auth.unHashJwtToken(token);
     const email = jwt.sub;
     const storedTokenId = (yield database.getHashIdFromEmail(email)).id;
-    if (storedTokenId !== jwt.tokenId || moment.utc(jwt.exp).isAfter(moment.utc())) {
+    if (storedTokenId !== jwt.tokenId || moment.utc().isAfter(moment.utc(jwt.exp))) {
       return errors.sendError(errors.ERRORS.RESET_TOKEN_INVALID, next);
     }
 

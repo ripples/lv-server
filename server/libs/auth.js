@@ -11,7 +11,7 @@ const SIGNING_KEY = process.env.SIGNING_KEY;
 
 
 function middleware(req, res, next) {
-  const token = req.headers.authorization;
+  const token = req.cookies["ripples-lv"];
   if (!token) {
     return errors.sendError(errors.ERRORS.UNAUTHORIZED_ACCESS, next);
   }
