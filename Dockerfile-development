@@ -1,9 +1,10 @@
 FROM node:6.2.2
 
-RUN npm install -g nodemon
+RUN npm install -g yarn
+RUN yarn install -g nodemon
 
 COPY ./package.json /src/package.json
-RUN cd /src && npm install
+RUN cd /src && yarn install
 
 COPY . /src
 
