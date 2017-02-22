@@ -24,6 +24,7 @@ function request(route) {
       err.status = status == 404 ? 404 : 500;
       throw err;
     }
+    return data;
   });
 }
 
@@ -50,6 +51,6 @@ function getLectureData(semester, courseId, lectureName) {
 }
 
 module.exports = {
-  getLectures: getLectures,
-  getLectureData: getLectureData
+  getLectures,
+  getLectureData
 };
