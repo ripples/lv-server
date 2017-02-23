@@ -401,7 +401,7 @@
       <table class="email-content" width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td class="email-masthead">
-            <a href="https://example.com" class="email-masthead_name">
+            <a href="<%- loginPage %>" class="email-masthead_name">
               Lecture Viewer
             </a>
           </td>
@@ -444,7 +444,7 @@
                   </table>
                   <p>For security, this request was received from a <%= userAgent.os %> device using
                     <%= userAgent.browser %>. If you did not request a password reset, please ignore this
-                    email or <a href="<%- mailerEmail %>">contact support</a> if you have questions.
+                    email or <a href="mailto:<%- mailerEmail %>">contact support</a> if you have questions.
                   </p>
                   <p>Thanks,
                     <br>The Lecture Viewer Team</p>

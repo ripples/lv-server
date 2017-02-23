@@ -68,6 +68,7 @@ function sendPasswordReset(email, userAgent, resetToken) {
   return new Promise((resolve, reject) => {
     const resetLink = `${baseUrl}/reset?token=${resetToken}`;
     const ejsOptions = {
+      loginPage: `${process.env.CLIENT_BASE_URL}/login`,
       resetLink,
       email,
       userAgent,
