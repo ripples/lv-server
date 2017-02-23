@@ -65,7 +65,7 @@ router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
     ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
 
   mediaApi.getLectureData(info.semester, info.course.id, info.lectureName)
-    .then(res.send)
+    .then(data => res.send(data))
     .catch(next);
 });
 
