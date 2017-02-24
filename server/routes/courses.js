@@ -37,10 +37,11 @@ router.get("/", (req, res, next) => {
       yield database.getCourseListMetaData(courseIds)
     ]);
     const dbResponse = _.castArray(values.pop());
-    const response = values.map(mediaResponse => {
+    let response = {};
+    values.forEach(mediaResponse => {
       const courseMetaData = dbResponse.find(courseMetaData => courseMetaData.id === mediaResponse.id);
 
-      return {
+      response[courseMetaData.id] = {
         id: courseMetaData.id,
         name: courseMetaData.course_name,
         lectures: mediaResponse.lectures,
