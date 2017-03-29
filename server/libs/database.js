@@ -124,7 +124,7 @@ function getIdAndHashFromEmail(email) {
 /**
  *
  * @param {Number} id - user id
- * @return {Promise} - promise of result
+ * @return {Promise<Array>} - promise of result
  * result Object consists of many rows, has structure:
  * [
  *  {
@@ -236,6 +236,21 @@ function insertResetIdForEmail(email) {
   });
 }
 
+/**
+ * Courses for an instructors courses and the enrolled student information
+ * @param {String} courseIds - list of courseIds owned by professor
+ * @return {Promise} - promise of result
+ */
+function instructorCoursesUsers(courseIds) {
+  return new Promise((resolve, reject) => {
+    getCurrentSemester().then(semester => {
+      query(queries["instructor-courses-users"], [courseIds, semester])
+        .then(resolve)
+        .catch(reject);
+    }).catch(reject);
+  });
+}
+
 module.exports = {
   getCourseListMetaData,
   getIdAndHashFromEmail,
@@ -245,5 +260,6 @@ module.exports = {
   getHashIdFromEmail,
   invalidateResetIdsForEmail,
   insertResetIdForEmail,
-  invalidateResetIdForId
+  invalidateResetIdForId,
+  instructorCoursesUsers
 };

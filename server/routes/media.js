@@ -14,6 +14,63 @@ const MEDIA_PATH = path.join("/api", constants.CONTAINER_MEDIA_DIR);
  */
 
 /**
+ *  Serves authenticated video via lv-proxy
+ */
+router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
+  const info = getLectureInfoOrReturn401(req, res);
+  logger.info(
+    `Lecture: ${info.lectureName} video requested for
+    ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
+
+  const videoPath = path.join(MEDIA_PATH, info.semester, info.course.id, info.lectureName, "videoLarge.mp4");
+  sendRedirectResponse(videoPath, "video/mp4", res);
+});
+
+/**
+ *  Serves authenticated image metadata via lv-proxy
+ */
+router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
+  const info = getLectureInfoOrReturn401(req, res);
+  logger.info(
+    `Lecture: ${info.lectureName} image meta data requested for
+    ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
+
+  mediaApi.getLectureData(info.semester, info.course.id, info.lectureName)
+    .then(data => res.send(data))
+    .catch(next);
+});
+
+/**
+ *  Serves authenticated image via lv-proxy
+ */
+router.get("/:semester/:courseId/:lectureName/images/:mediaName", (req, res, next) => {
+    const info = getLectureInfoOrReturn401(req, res);
+    const image = new ImageFile(req.params.mediaName);
+
+    logger.info(`Lecture: ${info.lectureName} ${image.type} image requested for
+              ${info.courseId}:${info.course.name}:${image.name} requested by ${req.user.sub}`);
+
+    const imageThumbPath = path.join(
+      MEDIA_PATH, info.semester, info.course.id, info.lectureName, image.type, `${image.name}.png`);
+
+    sendRedirectResponse(imageThumbPath, "image/png", res);
+  }
+);
+
+class ImageFile {
+  constructor(imageName) {
+    this.name = imageName;
+
+    const imageData = imageName.split("-");
+    this.type = imageData[0];
+    this.cameraNumber = Number(imageData[1]);
+    this.timestamp = Number(imageData[2]);
+    this.size = imageData.length > 3 ? "thumb" : "full";
+  }
+}
+
+
+/**
  * Sends response with included media path payload
  * @param {String} mediaPath - path of media source
  * @param {String} contentType - mimeType of response
@@ -44,59 +101,5 @@ function getLectureInfoOrReturn401(req, res) {
   }
   return info;
 }
-
-/**
- *  Serves authenticated video data via lv-proxy
- */
-router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
-  const info = getLectureInfoOrReturn401(req, res);
-  logger.info(
-    `Lecture: ${info.lectureName} video requested for
-    ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
-
-  const videoPath = path.join(MEDIA_PATH, info.semester, info.course.id, info.lectureName, "videoLarge.mp4");
-  sendRedirectResponse(videoPath, "video/mp4", res);
-});
-
-router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
-  const info = getLectureInfoOrReturn401(req, res);
-  logger.info(
-    `Lecture: ${info.lectureName} image meta data requested for
-    ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
-
-  mediaApi.getLectureData(info.semester, info.course.id, info.lectureName)
-    .then(data => res.send(data))
-    .catch(next);
-});
-
-router.get("/:semester/:courseId/:lectureName/images/:mediaType(whiteboard|computer)/:imageSize(full|thumb)/:mediaName",
-  (req, res, next) => {
-    const info = getLectureInfoOrReturn401(req, res);
-    const mediaType = req.params.mediaType;
-    const mediaName = req.params.mediaName;
-    let imageSize = req.params.imageSize;
-
-    logger.info(`Lecture: ${info.lectureName} ${mediaType} image requested for
-              ${info.courseId}:${info.course.name}:${mediaName} requested by ${req.user.sub}`);
-
-    switch (imageSize) {
-      case "full": {
-        imageSize = "";
-        break;
-      }
-      case "thumb": {
-        imageSize = "-thumb";
-        break;
-      }
-      default: {
-        throw new Error("Unknown image size request");
-      }
-    }
-
-    const imageThumbPath = path.join(
-      MEDIA_PATH, info.semester, info.course.id, info.lectureName, mediaType, `${mediaName}${imageSize}.png`);
-
-    sendRedirectResponse(imageThumbPath, "image/png", res);
-  });
 
 module.exports = router;

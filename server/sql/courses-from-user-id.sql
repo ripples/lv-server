@@ -1,6 +1,7 @@
 SELECT
   c.id,
-  c.name
+  c.name,
+  lcu.user_type_id
 FROM courses c
   INNER JOIN lkp_course_users lcu ON c.id = lcu.course_id
   INNER JOIN semesters s ON s.id = c.semester_id

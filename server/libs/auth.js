@@ -3,6 +3,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const moment = require("moment");
+const _ = require("lodash");
 
 const errors = require("./errors");
 const database = require("./database");
@@ -62,16 +63,25 @@ function generateEmailJwt(email, id) {
 function generateUserJwt(id) {
   return new Promise((resolve, reject) => {
     database.getCoursesFromUserId(id).then(result => {
-      const claims = {
+      let claims = {
         iss: "Lecture Viewer",
         sub: id,
-        courses: result.map(course => {
-          return {
-            id: course.id,
-            name: course.name
-          };
-        })
+        courses: {}
       };
+
+      result.forEach(course => {
+        const courses = claims.courses;
+        const user_type_id = course.user_type_id;
+        if (!_.isArray(courses[user_type_id])) {
+          courses[user_type_id] = [];
+        }
+
+        courses[user_type_id].push({
+          id: course.id,
+          name: course.name
+        });
+      });
+
       resolve(_createJwtToken(claims));
     }).catch(reject);
   });
