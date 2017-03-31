@@ -2,6 +2,7 @@
 
 const router = require("express").Router();
 const path = require("path");
+const _ = require("lodash");
 
 const logger = require("../libs/logger").logger;
 const mediaApi = require("../libs/mediaApi");
@@ -18,10 +19,8 @@ const MEDIA_PATH = path.join("/api", constants.CONTAINER_MEDIA_DIR);
  */
 router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
   const info = getLectureInfoOrReturn401(req, res);
-  logger.info(
-    `Lecture: ${info.lectureName} video requested for
-    ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
-
+  if (!info) return;
+  logger.info(`Lecture: ${info.lectureName} video requested for ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
   const videoPath = path.join(MEDIA_PATH, info.semester, info.course.id, info.lectureName, "videoLarge.mp4");
   sendRedirectResponse(videoPath, "video/mp4", res);
 });
@@ -31,10 +30,8 @@ router.get("/:semester/:courseId/:lectureName/video", (req, res, next) => {
  */
 router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
   const info = getLectureInfoOrReturn401(req, res);
-  logger.info(
-    `Lecture: ${info.lectureName} image meta data requested for
-    ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
-
+  if (!info) return;
+  logger.info(`Lecture: ${info.lectureName} image meta data requested for ${info.courseId}:${info.course.name} requested by ${req.user.sub}`);
   mediaApi.getLectureData(info.semester, info.course.id, info.lectureName)
     .then(data => res.send(data))
     .catch(next);
@@ -43,16 +40,18 @@ router.get("/:semester/:courseId/:lectureName/images", (req, res, next) => {
 /**
  *  Serves authenticated image via lv-proxy
  */
-router.get("/:semester/:courseId/:lectureName/images/:mediaName", (req, res, next) => {
+router.get("/:semester/:courseId/:lectureName/images/:imageSize(full|thumb)/:imageName", (req, res, next) => {
     const info = getLectureInfoOrReturn401(req, res);
-    const image = new ImageFile(req.params.mediaName);
+    if (!info) return;
+    const image = new ImageFile(req.params.imageName);
+    const imageSize = req.params.imageSize === "full" ? "" : "-thumb";
 
-    logger.info(`Lecture: ${info.lectureName} ${image.type} image requested for
-              ${info.courseId}:${info.course.name}:${image.name} requested by ${req.user.sub}`);
+    logger.info(`Lecture: ${info.lectureName} | Image: ${image.name}-${imageSize} requested for
+              ${info.courseId}:${info.course.name}: requested by ${req.user.sub}`);
 
     const imageThumbPath = path.join(
-      MEDIA_PATH, info.semester, info.course.id, info.lectureName, image.type, `${image.name}.png`);
-
+      MEDIA_PATH, info.semester, info.course.id, info.lectureName, image.type, `${image.name}${imageSize}.png`);
+    console.log(imageThumbPath);
     sendRedirectResponse(imageThumbPath, "image/png", res);
   }
 );
@@ -86,18 +85,20 @@ function sendRedirectResponse(mediaPath, contentType, res) {
  * Extracts lecture info from request or throws 401 if user is unauthorized
  * @param {Object} req - Express Request object to extract lecture info
  * @param {Object} res - Express Response object to send 401 response if unauthorized
- * @return {Object} returns object wih lecture info if authorized user
+ * @return {Object | null} returns object wih lecture info if authorized user
  */
 function getLectureInfoOrReturn401(req, res) {
+  const userTypesCourses = req.user.userTypesCourses;
   const info = {
     semester: req.params.semester,
     courseId: req.params.courseId,
     lectureName: req.params.lectureName,
-    course: req.user.courses.find(course => course.id === req.params.courseId)
+    course: _.flatMap(userTypesCourses).find(course => course.id === req.params.courseId)
   };
   // User not registered to course
   if (!info.course) {
     res.sendStatus(401);
+    return null;
   }
   return info;
 }

@@ -251,6 +251,18 @@ function instructorCoursesUsers(courseIds) {
   });
 }
 
+/**
+ * Gets user types
+ * @return {Promise} - promise of result
+ */
+function getUserTypes() {
+  return new Promise((resolve, reject) => {
+    query(queries["get-user-types"])
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
 module.exports = {
   getCourseListMetaData,
   getIdAndHashFromEmail,
@@ -261,5 +273,6 @@ module.exports = {
   invalidateResetIdsForEmail,
   insertResetIdForEmail,
   invalidateResetIdForId,
-  instructorCoursesUsers
+  instructorCoursesUsers,
+  getUserTypes
 };

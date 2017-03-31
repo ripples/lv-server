@@ -13,14 +13,18 @@ const mediaApi = require("../libs/mediaApi");
  */
 
 router.get("/", (req, res, next) => {
-  const courses = req.user.courses;
-  const courseIds = courses.map(course => course.id);
+  const userTypesCourses = req.user.userTypesCourses;
+  const courseIds = _.flatMap(userTypesCourses, userType => userType.map(course => course.id));
+  const courseToUserTypeId = _.transform(userTypesCourses, (result, userType, userTypeId) => {
+    userType.forEach(course => result[course.id] = userTypeId);
+    return result;
+  }, {});
 
   logger.info(`[${courseIds}] requested by ${req.user.sub}`);
 
   if (courseIds.length == 0) {
     res.send({
-      message: "User not enrolled in any courses"
+      message: "User not enrolled nor professes any courses"
     });
     return;
   }
@@ -28,22 +32,23 @@ router.get("/", (req, res, next) => {
   co(function* () {
     const currentSemester = yield database.getCurrentSemester();
     const values = yield Promise.all([
-      ...yield courses.map(function* (course) {
+      ...yield courseIds.map(function* (id) {
         return {
-          id: course.id,
-          lectures: yield mediaApi.getLectures(currentSemester, course.id)
+          id,
+          lectures: yield mediaApi.getLectures(currentSemester, id)
         }
       }),
-      yield database.getCourseListMetaData(courseIds)
+      yield database.getCourseListMetaData(courseIds),
     ]);
     const dbResponse = _.castArray(values.pop());
-    let response = {};
+    let response = _.mapValues(userTypesCourses, () => {return {};});
     values.forEach(mediaResponse => {
       const courseMetaData = dbResponse.find(courseMetaData => courseMetaData.id === mediaResponse.id);
+      const userTypeId = courseToUserTypeId[courseMetaData.id];
 
-      response[courseMetaData.id] = {
+      response[userTypeId][courseMetaData.id] = {
         id: courseMetaData.id,
-        name: courseMetaData.course_name,
+        title: courseMetaData.id, // should be courseMetaData.course_name but we don't have the data right now
         lectures: mediaResponse.lectures,
         description: courseMetaData.course_description,
         prof: `${courseMetaData.prof_fname} ${courseMetaData.prof_lname}`,

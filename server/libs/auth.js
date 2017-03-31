@@ -66,11 +66,11 @@ function generateUserJwt(id) {
       let claims = {
         iss: "Lecture Viewer",
         sub: id,
-        courses: {}
+        userTypesCourses: {}
       };
 
       result.forEach(course => {
-        const courses = claims.courses;
+        const courses = claims.userTypesCourses;
         const user_type_id = course.user_type_id;
         if (!_.isArray(courses[user_type_id])) {
           courses[user_type_id] = [];
