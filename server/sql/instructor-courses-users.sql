@@ -1,6 +1,7 @@
 SELECT
   u.fname,
   u.lname,
+  u.email,
   u.id as user_id,
   c.id as course_id,
   c.name as course_name,
