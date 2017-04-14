@@ -60,7 +60,7 @@ router.get("/", (req, res, next) => {
   }).catch(next);
 });
 
-router.get("/instructor-settings/", (req, res, next) => {
+router.get("/instructor-settings", (req, res, next) => {
   const userTypesCourses = req.user.userTypesCourses;
   const courseIds = _.flatMap(userTypesCourses, userType => userType.map(course => course.id));
 
