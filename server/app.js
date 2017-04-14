@@ -11,6 +11,7 @@ const logger = require("./libs/logger");
 const login = require("./routes/login");
 const courses = require("./routes/courses");
 const media = require("./routes/media");
+const instructorSettings = require("./routes/instructor-settings");
 const internalUsers = require("./routes/internal/users");
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/v1/login", login);
 // authenticated routes
 app.use("/api/v1/courses", auth.middleware, courses);
 app.use("/api/v1/media", auth.middleware, media);
+app.use("/api/v1/instructor-settings", auth.middleware, instructorSettings);
 
 // internal routes, should only be accessed by other docker containers defined by proxy rules
 app.use("/internal/users", internalUsers);
