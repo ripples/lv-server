@@ -57,9 +57,10 @@ function loadQueries(pathName) {
  * Returns promise of query
  * @param {String} query - sql query
  * @param {Array<*>} [args] - list of arguments
+ * @param {boolean} [many=false] - if many results expected
  * @return {Promise} - promise of result
  */
-function query(query, args) {
+function query(query, args, many=false) {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {
       if (err) {
@@ -71,10 +72,10 @@ function query(query, args) {
         (err, result) => {
           if (err) {
             reject(err);
-          } else if (Object.keys(result).length === 1) {
-            resolve(result[0])
+          } else if (many) {
+            resolve(result)
           } else {
-            resolve(result);
+            resolve(result[0]);
           }
         });
       connection.release();
@@ -106,12 +107,10 @@ function getCurrentSemester() {
  * @param {String} email - user email
  * @return {Promise} - promise of result
  * success Object consists of one row, has structure:
- * [
  *  {
  *    id: number,
  *    password: string
  *  }
- * ]
  */
 function getIdAndHashFromEmail(email) {
   return new Promise((resolve, reject) => {
@@ -136,7 +135,7 @@ function getIdAndHashFromEmail(email) {
 function getCoursesFromUserId(id) {
   return new Promise((resolve, reject) => {
     getCurrentSemester().then(semester => {
-      query(queries["courses-from-user-id"], [id, semester])
+      query(queries["courses-from-user-id"], [id, semester], true)
         .then(resolve)
         .catch(reject);
     }).catch(reject);
@@ -163,7 +162,7 @@ function getCoursesFromUserId(id) {
  */
 function getCourseListMetaData(courseIds) {
   return new Promise((resolve, reject) => {
-    query(queries["course-list-meta-data"], [courseIds, courseIds])
+    query(queries["course-list-meta-data"], [courseIds, courseIds], true)
       .then(resolve)
       .catch(reject);
   });

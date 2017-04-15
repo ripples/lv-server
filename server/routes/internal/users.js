@@ -21,8 +21,9 @@ router.post("/invite", (req, res, next) => {
   const promises = emails.map((email) => {
     return new Promise((resolve, reject) => {
       co(function* () {
+        yield database.invalidateResetIdsForEmail(email);
         const id = (yield database.insertResetIdForEmail(email)).insertId;
-        const token = auth.generateEmailJwt(email, id);
+        const token = auth.generateEmailJwt(email, id, 168);
         const response = yield mailer.sendInviteReset(email, token);
         resolve(response);
       });

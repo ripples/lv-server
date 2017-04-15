@@ -42,9 +42,10 @@ function unHashJwtToken(token) {
  * Returns a JWT token containing the user email
  * @param {string} email - user email
  * @param {number} id - token id
+ * @param {number} [validFor=2] - length of validity of token in hours
  * @return {string} - promise of result
  */
-function generateEmailJwt(email, id) {
+function generateEmailJwt(email, id, validFor=2) {
   const claims = {
     iss: "Lecture Viewer",
     sub: email,
