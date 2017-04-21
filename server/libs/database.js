@@ -3,6 +3,7 @@
 const mysql = require("mysql");
 const fs = require("fs");
 const path = require("path");
+const _ = require("lodash");
 
 const logger = require("./logger").logger;
 
@@ -57,60 +58,55 @@ function loadQueries(pathName) {
  * Returns promise of query
  * @param {String} query - sql query
  * @param {Array<*>} [args] - list of arguments
- * @param {boolean} [many=false] - if many results expected
- * @return {Promise<Array<*>> | Promise<*> | undefined} - promise of result
+ * @param {Boolean} [many=false] - if many rows expected
+ * @return {Promise<{data: *}> | undefined} - promise of result
  */
 function query(query, args, many=false) {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {
       if (err) {
         logger.error(err.message);
-        reject(err);
-        return;
+        return reject(err);
       }
-      connection.query(query, args,
-        (err, result) => {
-          if (err) {
-            reject(err);
-          } else if (many) {
-            resolve(result)
-          } else {
-            resolve(result[0]);
-          }
-        });
+      connection.query(query, args, (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+
+        if (many) {
+          result.data = _.map(result);
+        } else {
+          result.data = result[0];
+        }
+        resolve(result);
+      });
       connection.release();
     });
   });
 }
 
 /**
- * Gets current semester
- * @return {Promise<String>} - current semester id
+ * Gets current semester id, start epoch and end epoch
+ * @return {Promise<{data: {id: String, startEpoch: Number, endEpoch: Number}}>} - promise with current semester info
  */
-function getCurrentSemester() {
+function getCurrentSemesterInfo() {
   return new Promise((resolve, reject) => {
     if (currentSemester.endEpoch > new Date().getTime()) {
-      resolve(currentSemester.id);
+      resolve(currentSemester);
       return;
     }
-    logger.info(`Current semester(${currentSemester.id}) cache of date is invalid 
-    with end date ${new Date(currentSemester.endEpoch)}, resolving to latest db entry`);
+    logger.info(`Current semester(${currentSemester.id}) cache of date is invalid with end date ${new Date(currentSemester.endEpoch)}, resolving to latest db entry`);
     query(queries["current-semester"]).then(result => {
       currentSemester = result;
-      resolve(currentSemester.id);
+      resolve(currentSemester);
     }).catch(reject);
   });
 }
 
 /**
- *
+ * Gets id and password from user email
  * @param {String} email - user email
- * @return {Promise} - promise of result
- * success Object consists of one row, has structure:
- *  {
- *    id: number,
- *    password: string
- *  }
+ * @return {Promise<{data: {id: Number, password: String}}>} - promise with id and password
  */
 function getIdAndHashFromEmail(email) {
   return new Promise((resolve, reject) => {
@@ -121,21 +117,14 @@ function getIdAndHashFromEmail(email) {
 }
 
 /**
- *
+ * Gets course id and names for user
  * @param {Number} id - user id
- * @return {Promise} - promise of result
- * result Object consists of many rows, has structure:
- * [
- *  {
- *    id: number,
- *  },
- *  ...
- * ]
+ * @return {Promise<{data: Array<{id: Number, name: String}>}>} - promise with list of course info objects
  */
 function getCoursesFromUserId(id) {
   return new Promise((resolve, reject) => {
-    getCurrentSemester().then(semester => {
-      query(queries["courses-from-user-id"], [id, semester], true)
+    getCurrentSemesterInfo().then(semester => {
+      query(queries["courses-from-user-id"], [id, semester.data.id], true)
         .then(resolve)
         .catch(reject);
     }).catch(reject);
@@ -143,22 +132,19 @@ function getCoursesFromUserId(id) {
 }
 
 /**
- *
+ * Gets information for list of course ids
  * @param {Array.<Number>} courseIds - list of course ids
- * @return {Promise} - promise of result
- * result Object consists of many rows, has structure:
- * [
- *  {
- *    course_name: string,
- *    course_description: string,
- *    start_dtm: string,
- *    end_dtm: string,
- *    prof_fname: string,
- *    prof_lname: string,
- *    prof_email: string
- *  },
- *  ...
- * ]
+ * @return {Promise<{
+ *    data: Array<{
+ *      course_name: String,
+ *      course_description: String,
+ *      start_dtm: String,
+ *      end_dtm: String,
+ *      prof_fname: String,
+ *      prof_lname: String,
+ *      prof_email: String
+ *    }>
+ * }>} - promise of result
  */
 function getCourseListMetaData(courseIds) {
   return new Promise((resolve, reject) => {
@@ -172,7 +158,7 @@ function getCourseListMetaData(courseIds) {
  * Sets password hash
  * @param {String} email - user email
  * @param {String} passwordHash - hashed password
- * @return {Promise} - promise of result
+ * @return {Promise<{data: *}>} - promise of result
  */
 function updatePasswordHash(email, passwordHash) {
   return new Promise((resolve, reject) => {
@@ -185,7 +171,7 @@ function updatePasswordHash(email, passwordHash) {
 /**
  * Gets token hash id for given email
  * @param {String} email - user email
- * @return {Promise<{id: Number} | undefined>} - promise which will returned hash id for the given email
+ * @return {Promise<{data: {id: Number} | undefined}>} - promise which will returned hash id for the given email
  */
 function getHashIdFromEmail(email) {
   return new Promise((resolve, reject) => {
@@ -198,7 +184,7 @@ function getHashIdFromEmail(email) {
 /**
  * Invalidates all reset token ids for given email
  * @param {String} email - user email
- * @return {Promise<*>} - promise of result
+ * @return {Promise<{data: *}>} - promise of result
  */
 function invalidateResetIdsForEmail(email) {
   return new Promise((resolve, reject) => {
@@ -211,7 +197,7 @@ function invalidateResetIdsForEmail(email) {
 /**
  * Invalidates reset token has for given row id
  * @param {String} rowId - row id in db
- * @return {Promise} - promise of result
+ * @return {Promise<{data: *}>} - promise of result
  */
 function invalidateResetIdForId(rowId) {
   return new Promise((resolve, reject) => {
@@ -225,7 +211,7 @@ function invalidateResetIdForId(rowId) {
 /**
  * Inserts a reset token hash for given email
  * @param {String} email - user email
- * @return {Promise} - promise of result
+ * @return {Promise<{data: *}>} - promise of result
  */
 function insertResetIdForEmail(email) {
   return new Promise((resolve, reject) => {
@@ -239,7 +225,7 @@ module.exports = {
   getCourseListMetaData,
   getIdAndHashFromEmail,
   getCoursesFromUserId,
-  getCurrentSemester,
+  getCurrentSemesterInfo,
   updatePasswordHash,
   getHashIdFromEmail,
   invalidateResetIdsForEmail,

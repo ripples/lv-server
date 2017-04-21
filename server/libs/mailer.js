@@ -3,13 +3,12 @@
 const nodemailer = require("nodemailer");
 const ejs = require('ejs');
 const logger = require("./logger.js").logger;
-const util = require("util");
 
 const baseUrl = process.env.CLIENT_BASE_URL;
 const mailerUser = process.env.MAILER_USER;
 const mailerPassword = process.env.MAILER_PASSWORD;
 
-if (util.isNullOrUndefined(mailerUser) || util.isNullOrUndefined(mailerPassword)) {
+if (!mailerUser || !mailerPassword) {
   logger.warn("Both MAILER_USER and MAILER_PASSWORD must be defined env vars to send emails");
 }
 

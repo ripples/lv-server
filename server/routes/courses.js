@@ -26,7 +26,7 @@ router.get("/", (req, res, next) => {
   }
 
   co(function* () {
-    const currentSemester = yield database.getCurrentSemester();
+    const currentSemester = (yield database.getCurrentSemesterInfo()).data.id;
     const values = yield Promise.all([
       ...yield courses.map(function* (course) {
         return {
@@ -34,7 +34,7 @@ router.get("/", (req, res, next) => {
           lectures: yield mediaApi.getLectures(currentSemester, course.id)
         }
       }),
-      yield database.getCourseListMetaData(courseIds)
+      (yield database.getCourseListMetaData(courseIds)).data
     ]);
     const dbResponse = _.castArray(values.pop());
     let response = {};

@@ -40,17 +40,18 @@ function unHashJwtToken(token) {
 
 /**
  * Returns a JWT token containing the user email
- * @param {string} email - user email
- * @param {number} id - token id
- * @param {number} [validFor=2] - length of validity of token in hours
- * @return {string} - promise of result
+ * @param {String} email - user email
+ * @param {Number} id - token id
+ * @param {Number} [validFor=2] - length of validity of token in {@link generateEmailJwt.unit}
+ * @param {moment.DurationInputArg2} [unit="hours"] - length of validity of token in hours
+ * @return {String} - jwt token
  */
-function generateEmailJwt(email, id, validFor=2) {
+function generateEmailJwt(email, id, validFor=2, unit="hours") {
   const claims = {
     iss: "Lecture Viewer",
     sub: email,
     tokenId: id,
-    exp: moment.utc().add(moment.duration(2, "hours")).valueOf()
+    exp: moment.utc().add(moment.duration(validFor, unit)).valueOf()
   };
   return _createJwtToken(claims);
 }

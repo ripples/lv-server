@@ -3,7 +3,6 @@
 const express = require("express");
 const router = express.Router();
 const co = require("co");
-const util = require("util");
 const moment = require("moment");
 
 const database = require("../libs/database");
@@ -23,7 +22,7 @@ router.post("/", (req, res, next) => {
 
   logger.info(`${email} attempting to authenticate`);
   co(function* () {
-    const result = yield database.getIdAndHashFromEmail(email);
+    const result = (yield database.getIdAndHashFromEmail(email)).data;
     try {
       yield auth.verifyStringAgainstHash(password, result.password)
     } catch (e) {
@@ -43,10 +42,10 @@ router.post("/forgot", (req, res, next) => {
   }
   co(function *() {
     yield database.invalidateResetIdsForEmail(email);
-    const userId = (yield database.getIdAndHashFromEmail(email)).id;
+    const userId = (yield database.getIdAndHashFromEmail(email)).data.id;
 
     // We don't want to tell them if they entered an invalid email
-    if (!util.isNullOrUndefined(userId)) {
+    if (!userId) {
       const id = (yield database.insertResetIdForEmail(email)).insertId;
       const token = auth.generateEmailJwt(email, id);
       yield mailer.sendPasswordReset(email, req.useragent, token);
@@ -64,7 +63,7 @@ router.post("/reset", (req, res, next) => {
     const jwt = yield auth.unHashJwtToken(token);
     const email = jwt.sub;
 
-    const result = yield database.getHashIdFromEmail(email);
+    const result = (yield database.getHashIdFromEmail(email)).data;
     let storedTokenId = "";
     if (result !== undefined) {
       storedTokenId = result.id;
@@ -83,7 +82,6 @@ router.post("/reset", (req, res, next) => {
     res.send({
       message: "success"
     });
-
   }).catch(next);
 });
 

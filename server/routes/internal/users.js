@@ -6,6 +6,7 @@ const database = require("../../libs/database");
 const auth = require("../../libs/auth");
 const co = require("co");
 const _ = require("lodash");
+const moment = require("moment");
 const logger = require("../../libs/logger.js").logger;
 
 /**
@@ -22,8 +23,14 @@ router.post("/invite", (req, res, next) => {
     return new Promise((resolve, reject) => {
       co(function* () {
         yield database.invalidateResetIdsForEmail(email);
+
+        // Token lasts until 1 week before semester ends
         const id = (yield database.insertResetIdForEmail(email)).insertId;
-        const token = auth.generateEmailJwt(email, id, 168);
+        const semesterEndEpoch = (yield database.getCurrentSemesterInfo()).data.endEpoch;
+        const timeUntilSemesterEnd = moment.duration(moment(semesterEndEpoch) - moment());
+        const emailDuration = timeUntilSemesterEnd.subtract(1, "week");
+
+        const token = auth.generateEmailJwt(email, id, emailDuration.asMilliseconds(), "milliseconds");
         const response = yield mailer.sendInviteReset(email, token);
         resolve(response);
       });
