@@ -58,7 +58,7 @@ function loadQueries(pathName) {
  * @param {String} query - sql query
  * @param {Array<*>} [args] - list of arguments
  * @param {boolean} [many=false] - if many results expected
- * @return {Promise} - promise of result
+ * @return {Promise<Array<*>> | Promise<*> | undefined} - promise of result
  */
 function query(query, args, many=false) {
   return new Promise((resolve, reject) => {
@@ -85,7 +85,7 @@ function query(query, args, many=false) {
 
 /**
  * Gets current semester
- * @return {Promise<string>} - promise of result
+ * @return {Promise<String>} - current semester id
  */
 function getCurrentSemester() {
   return new Promise((resolve, reject) => {
@@ -183,9 +183,9 @@ function updatePasswordHash(email, passwordHash) {
 }
 
 /**
- * Gets token hash for given email
+ * Gets token hash id for given email
  * @param {String} email - user email
- * @return {Promise} - promise of result
+ * @return {Promise<{id: Number} | undefined>} - promise which will returned hash id for the given email
  */
 function getHashIdFromEmail(email) {
   return new Promise((resolve, reject) => {
@@ -198,7 +198,7 @@ function getHashIdFromEmail(email) {
 /**
  * Invalidates all reset token ids for given email
  * @param {String} email - user email
- * @return {Promise} - promise of result
+ * @return {Promise<*>} - promise of result
  */
 function invalidateResetIdsForEmail(email) {
   return new Promise((resolve, reject) => {

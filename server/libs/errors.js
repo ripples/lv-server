@@ -8,6 +8,7 @@ const ERRORS = {
   EMAIL_REQUIRED: ["Email required", 400],
   INVALID_AUTH_INFO: ["Invalid email or password", 400],
   RESET_TOKEN_INVALID: ["Reset token is invalid", 401],
+  RESET_TOKEN_EXPIRED: ["Reset token has expired", 401],
   TOKEN_EXPIRED: ["Token expired", 401],
   UNAUTHORIZED_ACCESS: ["Unauthorized access", 401]
 

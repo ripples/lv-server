@@ -63,12 +63,19 @@ router.post("/reset", (req, res, next) => {
   co(function *() {
     const jwt = yield auth.unHashJwtToken(token);
     const email = jwt.sub;
-    const storedTokenId = (yield database.getHashIdFromEmail(email)).id;
 
-    // Either this token is going to be used or invalid, so let's just invalidate it early
-    yield database.invalidateResetIdForId(storedTokenId);
-    if (storedTokenId !== jwt.tokenId || moment.utc().isAfter(moment.utc(jwt.exp))) {
+    const result = yield database.getHashIdFromEmail(email);
+    let storedTokenId = "";
+    if (result !== undefined) {
+      storedTokenId = result.id;
+      // Either this token is going to be used or invalid, so let's just invalidate it early
+      yield database.invalidateResetIdForId(storedTokenId);
+    }
+
+    if (storedTokenId !== jwt.tokenId) {
       return errors.sendError(errors.ERRORS.RESET_TOKEN_INVALID, next);
+    } else if (moment.utc().isAfter(moment.utc(jwt.exp))) {
+      return errors.sendError(errors.ERRORS.RESET_TOKEN_EXPIRED, next);
     }
 
     const hashedPassword = yield auth.hashString(password);
