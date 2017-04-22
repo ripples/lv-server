@@ -40,12 +40,15 @@ router.post("/forgot", (req, res, next) => {
     errors.sendError(errors.ERRORS.EMAIL_REQUIRED, next);
     return;
   }
+
+  logger.info(`${email} forgot password`);
+
   co(function *() {
     yield database.invalidateResetIdsForEmail(email);
-    const userId = (yield database.getIdAndHashFromEmail(email)).data.id;
+    const user = (yield database.getIdAndHashFromEmail(email)).data;
 
     // We don't want to tell them if they entered an invalid email
-    if (!userId) {
+    if (!user) {
       const id = (yield database.insertResetIdForEmail(email)).insertId;
       const token = auth.generateEmailJwt(email, id);
       yield mailer.sendPasswordReset(email, req.useragent, token);
