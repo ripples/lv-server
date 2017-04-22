@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const moment = require("moment");
 
-const errors = require("./errors");
+const errors = require("./errors/errors");
 const database = require("./database");
 
 const SIGNING_KEY = process.env.SIGNING_KEY;
@@ -13,12 +13,12 @@ const SIGNING_KEY = process.env.SIGNING_KEY;
 function middleware(req, res, next) {
   const token = req.cookies["ripples-lv"];
   if (!token) {
-    return errors.sendError(errors.ERRORS.UNAUTHORIZED_ACCESS, next);
+    throw new errors.UnauthorizedAccess();
   }
   jwt.verify(token, SIGNING_KEY, {algorithms: ["HS256"]}, (err, decodedToken) => {
     if (err) {
       //TODO: handle each jwt error
-      return errors.sendError(errors.ERRORS.TOKEN_EXPIRED, next);
+      throw new errors.JwtTokenExpired();
     } else {
       req.user = decodedToken;
       next();
@@ -31,7 +31,8 @@ function unHashJwtToken(token) {
   return new Promise((resolve, reject) => {
     jwt.verify(token, SIGNING_KEY, (err, decodedToken) => {
       if (err) {
-        reject(errors.ERRORS.TOKEN_EXPIRED);
+        //TODO: handle each jwt error
+        throw new errors.JwtTokenExpired();
       }
       resolve(decodedToken);
     });

@@ -7,8 +7,8 @@ const moment = require("moment");
 
 const database = require("../libs/database");
 const logger = require("../libs/logger").logger;
-const errors = require("../libs/errors");
 const mailer = require("../libs/mailer");
+const errors = require("../libs/errors/errors");
 const auth = require("../libs/auth");
 
 
@@ -17,7 +17,7 @@ router.post("/", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
-    return errors.sendError(errors.ERRORS.EMAIL_REQUIRED, next);
+    throw new errors.EmailRequired();
   }
 
   logger.info(`${email} attempting to authenticate`);
@@ -26,7 +26,7 @@ router.post("/", (req, res, next) => {
     try {
       yield auth.verifyStringAgainstHash(password, result.password)
     } catch (e) {
-      return errors.sendError(errors.ERRORS.INVALID_AUTH_INFO, next);
+      throw new errors.InvalidAuthInfo();
     }
     const token = yield auth.generateUserJwt(result.id);
     logger.info(`${email} successfully authenticated`);
@@ -37,8 +37,7 @@ router.post("/", (req, res, next) => {
 router.post("/forgot", (req, res, next) => {
   const email = req.body.email;
   if (!email) {
-    errors.sendError(errors.ERRORS.EMAIL_REQUIRED, next);
-    return;
+    throw new errors.EmailRequired();
   }
 
   logger.info(`${email} forgot password`);
@@ -46,9 +45,9 @@ router.post("/forgot", (req, res, next) => {
   co(function *() {
     yield database.invalidateResetIdsForEmail(email);
     const user = (yield database.getIdAndHashFromEmail(email)).data;
-
     // We don't want to tell them if they entered an invalid email
-    if (!user) {
+    // TODO: wait half a second or so because it's easy to tell when the email is valid or not based on how quickly server responds
+    if (user) {
       const id = (yield database.insertResetIdForEmail(email)).insertId;
       const token = auth.generateEmailJwt(email, id);
       yield mailer.sendPasswordReset(email, req.useragent, token);
@@ -75,9 +74,9 @@ router.post("/reset", (req, res, next) => {
     }
 
     if (storedTokenId !== jwt.tokenId) {
-      return errors.sendError(errors.ERRORS.RESET_TOKEN_INVALID, next);
+      throw new errors.ResetTokenInvalid();
     } else if (moment.utc().isAfter(moment.utc(jwt.exp))) {
-      return errors.sendError(errors.ERRORS.RESET_TOKEN_EXPIRED, next);
+      throw new errors.ResetTokenExpired();
     }
 
     const hashedPassword = yield auth.hashString(password);

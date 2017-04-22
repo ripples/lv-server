@@ -7,6 +7,7 @@ const useragent = require('express-useragent');
 
 const auth = require("./libs/auth");
 const logger = require("./libs/logger");
+const errorHandler = require("./libs/errors/middleware");
 
 const login = require("./routes/login");
 const courses = require("./routes/courses");
@@ -33,17 +34,6 @@ app.use("/internal/users", interalUsers);
 
 // Error Handlers
 app.use(logger.errorLogger);
-app.use((err, req, res, next) => {
-  const status = err.status ? err.status : 500;
-  let response = null;
-  if (status >= 500) {
-    response = {error: "Something went wrong"}
-  } else {
-    response = {error: err.message, data: err.data};
-  }
-
-  res.status(status).json(response);
-});
-
+app.use(errorHandler);
 
 module.exports = app;
