@@ -26,7 +26,7 @@ router.get("/", (req, res, next) => {
   }
 
   co(function* () {
-    const currentSemester = (yield database.getCurrentSemesterInfo()).data.id;
+    const currentSemester = (yield database.getCurrentSemesterInfo()).id;
     const values = yield Promise.all([
       ...yield courses.map(function* (course) {
         return {

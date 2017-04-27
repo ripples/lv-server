@@ -26,7 +26,7 @@ router.post("/invite", (req, res, next) => {
 
         // Token lasts until 1 week before semester ends
         const id = (yield database.insertResetIdForEmail(email)).insertId;
-        const semesterEndEpoch = (yield database.getCurrentSemesterInfo()).data.endEpoch;
+        const semesterEndEpoch = (yield database.getCurrentSemesterInfo()).endEpoch;
         const timeUntilSemesterEnd = moment.duration(moment(semesterEndEpoch) - moment());
         const emailDuration = timeUntilSemesterEnd.subtract(1, "week");
 

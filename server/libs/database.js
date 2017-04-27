@@ -97,7 +97,7 @@ function getCurrentSemesterInfo() {
     }
     logger.info(`Current semester(${currentSemester.id}) cache of date is invalid with end date ${new Date(currentSemester.endEpoch)}, resolving to latest db entry`);
     query(queries["current-semester"]).then(result => {
-      currentSemester = result;
+      currentSemester = result.data;
       resolve(currentSemester);
     }).catch(reject);
   });
@@ -124,7 +124,7 @@ function getIdAndHashFromEmail(email) {
 function getCoursesFromUserId(id) {
   return new Promise((resolve, reject) => {
     getCurrentSemesterInfo().then(semester => {
-      query(queries["courses-from-user-id"], [id, semester.data.id], true)
+      query(queries["courses-from-user-id"], [id, semester.id], true)
         .then(resolve)
         .catch(reject);
     }).catch(reject);

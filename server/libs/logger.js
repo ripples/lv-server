@@ -25,7 +25,8 @@ const requestLogger = expressWinston.logger({
   ],
   meta: false,
   msg: "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}",
-  colorize: true
+  colorize: true,
+  statusLevels: true
 });
 
 const errorLogger = expressWinston.errorLogger({
